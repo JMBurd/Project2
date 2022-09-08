@@ -25,7 +25,6 @@ How to address error handling. Do we want to try and have text box notification 
 
 Meeting notes:
 Language to use: Python has good user interface capabilities. 
-We could use discord for better communication : https://discord.gg/xzRBjDFK
 Use Tkinter for GUI
 Use gitihub to share and edit code
 Write psuedocode and post it to Github
