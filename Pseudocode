@@ -12,6 +12,9 @@ def main()
 	#defineing varible and return varibles
 	#if blank/invalid or abort selected it will close
 	#if selection was invalid send up error messages error handling
+	
+	#have check boxes where they can enter parameters like gap penalty or mismatch penalty chaged by the user if nothing entered it will default
+	#make if so checkboxes sends a true false and if true reads the user input and sents it to a variable
 
 	#create file browse to take a FASTA
 	#select pathway to be input
