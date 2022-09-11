@@ -1,3 +1,64 @@
-this is where we can put the pseudocode for Project 2
 Testing
 Overlap test 1 
+
+Importing library/packages
+
+
+
+def main()
+	#prompting the user interface
+	#defineing varible and return varibles
+	#if blank/invalid or abort selected it will close
+	#if selection was invalid send up error messages error handling
+
+	#create file browse to take a FASTA
+	#select pathway to be input
+	#error handling to check if valid selection
+
+	#take file and send to data_clean()
+
+	#take returned variable from data_clean 
+
+	#check for valid sequence sending to sequence_check
+	#if statement to get true false from system check before continue if not send back to file select
+
+	#pass system check pass sequence variable to BWA
+
+	#run button for BWA
+	
+
+	#this should be where BWA returns and outputs a file
+	#after BWA give a command sucessful prompt or a error message if it does not execute 
+	
+	#output number of alignments and score matrix as a prompt
+		#BWA mem [-A matchscore], [-B mmPenalty], [-O gapOpenPen] 
+
+	#after output will force close the app/GUI
+
+
+def check()
+	#check system type to direct reference to CMD or bash
+
+def sequence_check()
+	#check to see that sequence is only ATGC
+	#use biopython to check sequence change true/false variable
+
+	#look at size from 70bp to 1000bp and send error prompt if the sequence is to large or small
+		#handle through if else statments
+
+	#return true false variable
+
+def BWA()
+	
+	#this should take in the file and run through BWA
+
+	#
+
+	#when BWA is run have it send the file through samtools to make BAM file
+
+def data_clean()
+	#seperate header and sequence data (regex)
+	#clear white space from sequence (regex) 
+
+	#convert test data to string for use
+	#return a sequence variable
