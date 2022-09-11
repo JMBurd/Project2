@@ -1,7 +1,9 @@
-Testing
-Overlap test 1 
+this is where we can put the pseudocode for Project 2
 
 Importing library/packages
+import os
+import biopython
+import regex
 
 
 
@@ -36,10 +38,14 @@ def main()
 	#after output will force close the app/GUI
 
 
+main()
+
+
 def check()
 	#check system type to direct reference to CMD or bash
+Check()
 
-def sequence_check()
+def seq_check()
 	#check to see that sequence is only ATGC
 	#use biopython to check sequence change true/false variable
 
@@ -47,6 +53,7 @@ def sequence_check()
 		#handle through if else statments
 
 	#return true false variable
+seq_check()
 
 def BWA()
 	
@@ -55,6 +62,13 @@ def BWA()
 	#
 
 	#when BWA is run have it send the file through samtools to make BAM file
+BWA()
+
+def BWA_win32()
+	#if needed
+BWA_win32()
+
+
 
 def data_clean()
 	#seperate header and sequence data (regex)
@@ -62,5 +76,4 @@ def data_clean()
 
 	#convert test data to string for use
 	#return a sequence variable
-	
-	
+data_clean()
