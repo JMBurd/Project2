@@ -1,0 +1,17 @@
+#This should take in the file and run through BWA + convert SAM files to BAM files 
+
+def BWA()
+	
+	#Get fasq files
+  
+  #Trim fastq files
+  
+  #Get reference genome
+  
+  #create results directory for bam + sam files
+  
+  #create index of reference
+  
+  #convert SAM to BAM files 
+  
+  
