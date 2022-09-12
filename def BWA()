@@ -1,17 +1,50 @@
 #This should take in the file and run through BWA + convert SAM files to BAM files 
 
+
+
+$ conda config --add channels bioconda
+$ conda config --add channels conda-forge
+$ conda config --show channels
+
 def BWA()
-	
-	#Get fasq files
-  
-  #Trim fastq files
-  
-  #Get reference genome
-  
-  #create results directory for bam + sam files
-  
-  #create index of reference
-  
-  #convert SAM to BAM files 
+
+$ conda create -n bwa bwa --create environment 
+$ conda env list --show the environments you can use
+$ conda activate bwa 
+	$bwa --check if it's working
+
+$ mkdir mapping --create directory
+$ cd mapping/ --go into directory
+
+--download the SRR files (paired end reads) from ncbi but I can't do this on my laptop so using the 619 demo ones as example
+$ wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR209/001/SRR2093871g/SRR2093871_1.fastq.gz
+$ wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR209/001/SRR2093871/SRR2093871_2.fastq.gz
+
+--now we need to doewnload the fasta file from ncbi
+$ ls --make sure all files are in your directory
+
+$ mkdir index --make index idectory
+$ mv file.fasta index/ --move fasta file to index
+$ bwz index index/fasta.index
+
+$ ls index/ --check your index
+
+$ bwa mem -t 8 index/file.fasta SRR2093871_1.fastq.gz SRR2093871_2.fastq.gz > output.sam
+
+$ ls --check what you have 
+
+$ samtools view -b output.sam > output.bam --convert SAM to BAM
+
+$ rm output.sam --remove the sam file that we no longer need 
+
+$ samtools sort -o output.sorted.bam output.bam --sorted the bam file
+
+$ ls -- see what files you have
+
+$ samtools index output.sorted.bam --index the bam file
+
+$ samtools flagstat output.sorted.bam -- QC check 
+
+
   
   
