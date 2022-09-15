@@ -1,0 +1,20 @@
+#The purpose of this code is to obtain FASTQ files from installed SRA files and check their quality.
+
+#Conda environment
+#sra-toolkit needed for installation
+
+$ conda install -c bioconda sra-tools
+$ tar -vxzf sratoolkit.tar.gz
+
+
+#Receive SRA files from online SRA database
+
+$ prefetch SRR2333215
+$ prefetch SRR1952721
+$ prefetch SRR1948177
+
+#Convert to FASTQ (paired-end reads) files from all SRA files in working directory
+
+$ fastq-dump --split-3 *.sra
+
+#
