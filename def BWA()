@@ -52,6 +52,8 @@ $ bwa mem -t 8 index/file.fasta SRR2093871_1.fastq.gz SRR2093871_2.fastq.gz > ou
 
 $ ls #check what you have 
 
+$ sudo apt install samtools #Install Samtools
+
 $ samtools view -b output.sam > output.bam #convert SAM to BAM
 
 $ rm output.sam #remove the sam file that we no longer need 
