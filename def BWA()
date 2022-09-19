@@ -1,6 +1,25 @@
 #This should take in the file and run through BWA + convert SAM files to BAM files 
 
+###
+For those who are already familiar with installation and setup for anaconda 52 or miniconda the steps for archiconda are similar. 
 
+First download and install a version of the archiconda installer:
+
+# use install path: $HOME/archiconda3
+wget --quiet -O archiconda.sh https://github.com/Archiconda/build-tools/releases/download/0.2.3/Archiconda3-0.2.3-Linux-aarch64.sh && \
+    sh archiconda.sh -b -p $HOME/archiconda3 && \
+    rm archiconda.sh
+Next we update the conda environment and add channels containing recipes for 64 bit Arm packages.
+
+export PATH=$HOME/archiconda3/bin:$PATH
+conda config --add channels gaiar && \
+conda config --add channels conda-forge && \
+conda config --add channels c4aarch64 && \
+conda update -n base --all && \
+conda install -y python=3.6.7 libiconv && \
+conda install -y conda-build && \
+conda install -y anaconda-client
+####
 
 $ conda config --add channels bioconda
 $ conda config --add channels conda-forge
