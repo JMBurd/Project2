@@ -2,9 +2,9 @@
 
 
 
-$ conda config #add channels bioconda
-$ conda config #add channels conda-forge
-$ conda config #show channels
+$ conda config --add channels bioconda
+$ conda config --add channels conda-forge
+$ conda config --show channels #shows you that you have actually downloaded channels 
 
 def BWA()
 
