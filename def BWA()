@@ -17,7 +17,7 @@ $ mkdir mapping #create directory
 $ cd mapping/ #go into directory
 
 #download the SRR files (paired end reads) from ncbi but I can't do this on my laptop so using the 619 demo ones as example
-$ wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR209/001/SRR2093871g/SRR2093871_1.fastq.gz
+$ wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR209/001/SRR2093871/SRR2093871_1.fastq.gz
 $ wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR209/001/SRR2093871/SRR2093871_2.fastq.gz
 
 #now we need to doewnload the fasta file from ncbi
