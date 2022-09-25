@@ -1,0 +1,72 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Sep 25 05:13:59 2022
+
+@author: John
+"""
+from tkinter import *
+#SeqIO will allow for parseing of files so we can do multiple seqeunces
+from Bio import SeqIO
+#allows for look up from entrez need to feed database for lookup
+from Bio import Entrez
+from tkinter import filedialog as fd
+
+root=Tk()
+
+
+#places a entry box on the screen
+e = Entry(root, width=50, borderwidth="5")
+e.grid(row=0,column=1)
+#this will place default text in the box
+e.insert(0,"gene ID for look up")
+#e.get() is used to take the entry and use it
+e.get()
+
+val=StringVar()
+val.set("nucleotide")
+
+#this needs to in intalized with the type of the variable intvar() for interger
+drop = OptionMenu(root,val, "nucleotide", "protein")
+drop.grid(row=0,column=0)
+
+def E_search():
+    db_id=var.get()
+    seq_id=e.get()
+    handle=Entrez.efetch(db='nucleotide', id=seq_id, rettype='fasta', retmode='text')
+    my_label=Label(root,text=handle.read())
+    my_label.grid()    
+
+
+def search():
+    filetype = (
+    ('fasta files', '*.fasta'),
+    ('All files', '*.*'))
+
+    root.filename = fd.askopenfilename(
+        title="select a file",
+        filetypes = filetype)
+    
+    file=open(root.filename, 'r')
+    fileread=file.read()
+
+    alabel=Label(root, text=fileread).grid()
+
+
+#creating the buttons for the search functions
+esearch_button=Button(root, 
+                      text="entrez search", 
+                      command=E_search)
+search_button=Button(root, 
+                     text="file search", 
+                     command=search)
+button_exit =Button(root,
+                    text="Exit", 
+                    command=root.destroy) #.destroy iwill stop mainloop
+
+#organizing the buttons on the grid on the window
+search_button.grid(row=1,column=2)
+esearch_button.grid(row=0,column=2)
+button_exit.grid(row=3,column=3)
+
+#makes it so it will constantly loop over program
+root.mainloop()
