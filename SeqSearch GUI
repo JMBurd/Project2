@@ -8,17 +8,29 @@ from Bio import SeqIO
 #allows for look up from entrez need to feed database for lookup
 from Bio import Entrez
 from tkinter import filedialog as fd
+from Bio.Sequencing.Applications import BwaIndexCommandline
+
+
+
 
 root=Tk()
 
 
 #places a entry box on the screen
-e = Entry(root, width=50, borderwidth="5")
-e.grid(row=0,column=1)
+refe = Entry(root, width=50, borderwidth="5")
+refe.grid(row=0,column=1)
 #this will place default text in the box
-e.insert(0,"gene ID for look up")
+refe.insert(0,"reference gene ID")
+#e.get() is used to take the entry and use it
+refe.get()
+
+e = Entry(root, width=50, borderwidth="5")
+e.grid(row=2,column=1)
+#this will place default text in the box
+e.insert(0,"gene ID ")
 #e.get() is used to take the entry and use it
 e.get()
+
 
 val=StringVar()
 val.set("nucleotide")
@@ -55,25 +67,72 @@ def search():
 
     alabel=Label(root, text=fileread).grid()
 
+def ref_E_search():
+    db_id=val.get()
+    seq_id=e.get()
+    handle=Entrez.efetch(db=db_id, 
+                         id=seq_id,
+                         rettype='fasta', 
+                         retmode='text')
+    my_label=Label(root,
+                   text=handle.read())
+    my_label.grid()    
+
+
+def ref_search():
+    filetype = (
+    ('fasta files', '*.fasta'),
+    ('All files', '*.*'))
+
+    root.filename = fd.askopenfilename(
+        title="select a file",
+        filetypes = filetype)
+    
+    file=open(root.filename, 'r')
+    fileread=file.read()
+
+    alabel=Label(root, text=fileread).grid()
+    
+def BWA_run():
+    return    
+
 
 #creating the buttons for the search functions
+ref_esearch_button=Button(root, 
+                      text="entrez search", 
+                      command=ref_E_search)
+ref_search_button=Button(root, 
+                     text="file search", 
+                     command=ref_search)
 esearch_button=Button(root, 
                       text="entrez search", 
                       command=E_search)
 search_button=Button(root, 
                      text="file search", 
                      command=search)
+BWA_button=Button(root, 
+                     text="run", 
+                     command=BWA_run)
 button_exit =Button(root,
                     text="Exit", 
                     command=root.destroy)
 
 #organizing the buttons on the grid on the window
-search_button.grid(row=1,
+ref_search_button.grid(row=1,
                    column=2)
-esearch_button.grid(row=0,
+ref_esearch_button.grid(row=0,
                     column=2)
-button_exit.grid(row=3,
+
+search_button.grid(row=3,
+                   column=2)
+esearch_button.grid(row=2,
+                    column=2)
+button_exit.grid(row=5,
                  column=3)
+BWA_button.grid(row=5,
+                column=2)
+
+
 
 #makes it so it will constantly loop over program
 root.mainloop()
