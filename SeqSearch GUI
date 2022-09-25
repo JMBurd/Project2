@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """
+
 @author: John
 """
 from tkinter import *
@@ -48,8 +49,12 @@ def E_search():
                          id=seq_id,
                          rettype='fasta', 
                          retmode='text')
+    global Efileread
+    
+    Efileread=handle.read()
+    
     my_label=Label(root,
-                   text=handle.read())
+                   text=Efileread)
     my_label.grid()    
 
 
@@ -62,6 +67,8 @@ def search():
         title="select a file",
         filetypes = filetype)
     
+    global fileread
+    
     file=open(root.filename, 'r')
     fileread=file.read()
 
@@ -70,12 +77,18 @@ def search():
 def ref_E_search():
     db_id=val.get()
     seq_id=e.get()
+    
+    globalrefhandle
+    
     handle=Entrez.efetch(db=db_id, 
                          id=seq_id,
                          rettype='fasta', 
                          retmode='text')
+    global  refEfileread
+    refEfileread=handle.read()
+    
     my_label=Label(root,
-                   text=handle.read())
+                   text= refEfileread)
     my_label.grid()    
 
 
@@ -83,13 +96,17 @@ def ref_search():
     filetype = (
     ('fasta files', '*.fasta'),
     ('All files', '*.*'))
-
+    
+    global reffileread
+    
     root.filename = fd.askopenfilename(
         title="select a file",
         filetypes = filetype)
     
     file=open(root.filename, 'r')
-    fileread=file.read()
+    reffileread=file.read()
+    
+    
 
     alabel=Label(root, text=fileread).grid()
     
@@ -136,6 +153,4 @@ BWA_button.grid(row=5,
 
 #makes it so it will constantly loop over program
 root.mainloop()
-
-    
     
