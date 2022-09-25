@@ -26,14 +26,20 @@ val=StringVar()
 val.set("nucleotide")
 
 #this needs to in intalized with the type of the variable intvar() for interger
-drop = OptionMenu(root,val, "nucleotide", "protein")
+drop = OptionMenu(root,val, 
+                  "nucleotide",
+                  "protein")
 drop.grid(row=0,column=0)
 
 def E_search():
-    db_id=var.get()
+    db_id=val.get()
     seq_id=e.get()
-    handle=Entrez.efetch(db='nucleotide', id=seq_id, rettype='fasta', retmode='text')
-    my_label=Label(root,text=handle.read())
+    handle=Entrez.efetch(db=db_id, 
+                         id=seq_id,
+                         rettype='fasta', 
+                         retmode='text')
+    my_label=Label(root,
+                   text=handle.read())
     my_label.grid()    
 
 
@@ -61,12 +67,18 @@ search_button=Button(root,
                      command=search)
 button_exit =Button(root,
                     text="Exit", 
-                    command=root.destroy) #.destroy iwill stop mainloop
+                    command=root.destroy)
 
 #organizing the buttons on the grid on the window
-search_button.grid(row=1,column=2)
-esearch_button.grid(row=0,column=2)
-button_exit.grid(row=3,column=3)
+search_button.grid(row=1,
+                   column=2)
+esearch_button.grid(row=0,
+                    column=2)
+button_exit.grid(row=3,
+                 column=3)
 
 #makes it so it will constantly loop over program
 root.mainloop()
+
+    
+    
