@@ -1,0 +1,29 @@
+from tkinter import *
+from tkinter import filedialog
+
+root = Tk()
+root.tile("BAM Stats")
+root.geometry("1000x1050")
+
+
+def open_txt():
+  text_file = filedialog.askopenfile(initialdr="C:/home", title= "Open Text", filetypes=(("Text Files", "*.txt"),))
+  text_file = open(text_file, 'r')
+  fileread= text_file.read()
+  
+  my_text.insert(END, fileread)
+  text_file.close()
+  
+  
+my_text = Text(root, width=800, height=200, font("Helvetica", 16))
+my_text.pack(pady=20)
+
+open_button = Button(root, text="Open Stats", command= open_txt)
+open_button.pack(pady=20)
+
+close_button = Button(root, text="Close", command= root.quit)
+close_button.pack(pady=20)
+
+root.mainloop()
+exit(0)
+  
