@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 
+add part to take SRA file to Fasta or fastQ
+
+add checkboxes for pair end or single end read
+
+
+
 @author: John
 """
 from tkinter import *
