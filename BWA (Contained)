@@ -1,0 +1,144 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Sep 25 05:13:59 2022
+
+@author: John, Stephanie
+"""
+from tkinter import *
+import os
+#SeqIO will allow for parseing of files so we can do multiple seqeunces
+from Bio import SeqIO
+#allows for look up from entrez need to feed database for lookup
+from Bio import Entrez
+from tkinter import filedialog as fd
+root=Tk()
+
+#Set global variables
+FASTA = 'reference.fasta'
+SAM = 'output.sam'
+BAM = 'output.bam'
+
+#places a entry box on the screen
+e = Entry(root, width=50, borderwidth="5")
+e.grid(row=0,column=1)
+#this will place default text in the box
+e.insert(0,"gene ID for look up")
+#e.get() is used to take the entry and use it
+e.get()
+val=StringVar()
+val.set("nucleotide")
+#this needs to in intalized with the type of the variable intvar() for interger
+drop = OptionMenu(root,val, 
+                  "nucleotide",
+                  "protein")
+drop.grid(row=0,column=0)
+def BWA():
+
+    #create -n bwa bwa #create environment
+    #env list #show the environments you can use
+    #activate bwa 
+	#bwa #check if it's working
+
+    os.system('mkdir mapping') #create directory
+    os.system('cd mapping/') #go into directory
+
+#download the SRR files (paired end reads) from ncbi but I can't do this on my laptop so using the 619 demo ones as example
+        #os.system('wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR209/001/SRR2093871/SRR2093871_1.fastq.gz')
+        #os.system('wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR209/001/SRR2093871/SRR2093871_2.fastq.gz')
+
+#now we need to doewnload the fasta file from ncbi
+    os.system('ls') #make sure all files are in your directory
+
+    os.system('mkdir index') #make index idectory
+    os.system('mv reference.fasta index/') #move fasta file to index
+    os.system('bwa index index/reference.fasta')
+
+    os.system('ls index/') #check your index
+
+    os.system('bwa mem -t 8 index/reference.fasta mapping/SRR2093871_1.fastq.gz mapping/SRR2093871_2.fastq.gz > output.sam')
+
+    #Make contained directory for all newly created files
+    os.system('mkdir BWA')
+
+    os.system('mkdir BWA/Seq')
+
+    os.system('mkdir BWA/SAM')
+
+    os.system('mkdir BWA/BAM')    
+
+    os.system('mv BWA ~/Documents')
+
+    os.system('ls') #check what you have 
+
+    #os.system('sudo apt install samtools') #Install Samtools
+    outfile = fd.askdirectory(title="Please select output pathway")
+
+    os.system('samtools view -b ~/SamFile/output.sam > '+ outfile + '/output1.bam') #convert SAM to BAM
+
+    os.system('rm output.sam') #remove the sam file that we no longer need 
+
+    os.system('samtools sort -o output.sorted.bam output.bam') #sorted the bam file
+
+    os.system('ls') #see what files you have
+
+    os.system('samtools index output.sorted.bam') #index the bam file
+
+    os.system('samtools flagstat output.sorted.bam') # QC check
+
+    os.system('mv index ~/Documents/BWA/Seq')
+
+    os.system('cd ~/Documents/BWA/Seq/index')
+
+    os.system('mv output.bam ~/Documents/BWA/BAM')
+
+    os.system('mv output.sorted.bam ~/Documents/BWA/BAM')
+
+#Pipeline command:
+        #os.system('bwa mem -t 8 index/file.fasta SRR2093871_1.fastq.gz SRR2093871_2.fastq.gz |samtools sort -o output.sorted.bam')
+
+def E_search():
+    db_id=val.get()
+    seq_id=e.get()
+    handle=Entrez.efetch(db=db_id, 
+                         id=seq_id,
+                         rettype='fasta', 
+                         retmode='text')
+    my_label=Label(root,
+                   text=handle.read())
+    my_label.grid()    
+def search():
+    filetype = (
+    ('fasta files', '*.fasta'),
+    ('All files', '*.*'))
+    root.filename = fd.askopenfilename(
+        title="select a file",
+        filetypes = filetype)
+    
+    file=open(root.filename, 'r')
+    fileread=file.read()
+    alabel=Label(root, text=fileread).grid()
+#creating the buttons for the search functions
+esearch_button=Button(root, 
+                      text="entrez search", 
+                      command=E_search)
+search_button=Button(root, 
+                     text="file search", 
+                     command=search)
+button_exit =Button(root,
+                    text="Exit", 
+                    command=root.destroy)
+button_exit =Button(root,
+                    text="Run", 
+                    command=root.destroy)
+#organizing the buttons on the grid on the window
+search_button.grid(row=1,
+                   column=2)
+esearch_button.grid(row=0,
+                    column=2)
+button_exit.grid(row=3,
+                 column=3)
+button_run.grid(row=3,
+                 column=2)
+#makes it so it will constantly loop over program
+root.mainloop()
+
