@@ -44,10 +44,18 @@ $ ls #make sure all files are in your directory
 
 $ mkdir index #make index idectory
 $ mv file.fasta index/ #move fasta file to index
-$ bwz index index/fasta.index
+$ bwa index index/fasta.index
 
 $ ls index/ #check your index
 
+
+
+#Pipeline command:
+$ bwa mem -t 8 index/file.fasta SRR2093871_1.fastq.gz SRR2093871_2.fastq.gz |samtools sort -o output.sorted.bam
+
+
+
+#Long command:
 $ bwa mem -t 8 index/file.fasta SRR2093871_1.fastq.gz SRR2093871_2.fastq.gz > output.sam
 
 $ ls #check what you have 
@@ -66,8 +74,6 @@ $ samtools index output.sorted.bam #index the bam file
 
 $ samtools flagstat output.sorted.bam # QC check 
 
-#Pipeline command:
-$ bwa mem -t 8 index/file.fasta SRR2093871_1.fastq.gz SRR2093871_2.fastq.gz |samtools sort -o output.sorted.bam
 
 
 
