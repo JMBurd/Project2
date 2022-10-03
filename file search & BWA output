@@ -154,10 +154,7 @@ def BWA_run():
  
         os.system('bwa mem -t 8 index/'+ BRefFileName+' '+BFileName+' |samtools sort -o '+g_BAM+'.bam')
         
-        l_inputString = 'bwa index '+g_FASTA
-        print(l_inputString)
-        os.system('bwa index BWA/Seq/reference.fasta')
-        g_BAM = fd.askdirectory(title="Please select output pathway")
+        
             
 def stats():
       os.system('samtools stats output.sorted.bam | grep ^SN| cut -f 2- > samtools.stats.txt')
@@ -173,14 +170,14 @@ def open_txt():
     text_file.close()
   
   
-my_text = Text(root, 800, 200, font=("Helvetica", 16))
-my_text.grid(pady=20)
-
-open_button = Button(root, text="Open Stats", command=open_txt)
-open_button.grid(pady=20)
-
-close_button = Button(root, text="Close", command= root.quit)
-close_button.grid(pady=20)
+    my_text = Text(root, 800, 200, font=("Helvetica", 16))
+    my_text.grid(pady=20)
+    
+    open_button = Button(root, text="Open Stats", command=open_txt)
+    open_button.grid(pady=20)
+    
+    close_button = Button(root, text="Close", command= root.quit)
+    close_button.grid(pady=20)
 
 
 
