@@ -1,0 +1,225 @@
+# -*- coding: utf-8 -*-
+"""
+
+"""
+from tkinter import *
+#SeqIO will allow for parseing of files so we can do multiple seqeunces
+from Bio import SeqIO
+#allows for look up from entrez need to feed database for lookup
+from Bio import Entrez
+from tkinter import filedialog as fd
+from Bio.Sequencing.Applications import BwaIndexCommandline
+import os
+
+#Set global variables
+g_FASTA = 'reference.fasta'
+g_SAM = 'output.sam'
+g_BAM = 'output.bam'
+
+
+global filename
+filename="reference gene ID"
+
+
+root=Tk()
+
+
+#places a entry box on the screen
+refe = Entry(root, width=50, borderwidth="5")
+refe.grid(row=0,column=1)
+#this will place default text in the box
+refe.insert(0,filename)
+#e.get() is used to take the entry and use it
+refe.get()
+
+e = Entry(root, width=50, borderwidth="5")
+e.grid(row=2,column=1)
+#this will place default text in the box
+e.insert(0,"gene ID ")
+#e.get() is used to take the entry and use it
+e.get()
+
+
+val=StringVar()
+val.set("nucleotide")
+
+#this needs to in intalized with the type of the variable intvar() for interger
+drop = OptionMenu(root,val, 
+                  "nucleotide",
+                  "protein")
+drop.grid(row=0,column=0)
+
+
+
+def search():
+    
+    global BFileName
+    
+    filetype = (
+    ('grep files', '*.gz'),
+    ('fasta files', '*.fasta'),
+    ('All files', '*.*'))
+
+    root.filename = fd.askopenfilename(
+        title="select a file",
+        filetypes = filetype)
+    
+    
+    BFileName = os.path.basename(root.filename)
+        
+    #this is a test print out and not needed
+    alabel=Label(root, text=BFileName).grid()
+    
+    
+def ref_search():
+    
+    global BRefFileName
+    
+    filetype = (
+    ('fasta files', '*.fasta'),
+    ('All files', '*.*'))
+    
+    
+    root.filename = fd.askopenfilename(
+       
+        title="select a file",
+        filetypes = filetype)
+    
+    BRefFileName = os.path.basename(root.filename)
+    
+    #this is a test print out and not needed
+    alabel=Label(root, text=BRefFileName).grid()
+    
+    
+"""    
+
+def ref_E_search():
+    db_id=val.get()
+    seq_id=e.get()
+    
+    globalrefhandle
+    
+    handle=Entrez.efetch(db=db_id, 
+                         id=seq_id,
+                         rettype='fasta', 
+                         retmode='text')
+    global  refEfileread
+    refEfileread=handle.read()
+    
+    my_label=Label(root,
+                   text= refEfileread)
+    my_label.grid()    
+    
+def E_search():
+    db_id=val.get()
+    seq_id=e.get()
+    handle=Entrez.efetch(db=db_id, 
+                         id=seq_id,
+                         rettype='fasta', 
+                         retmode='text')
+    global Efileread
+    
+    Efileread=handle.read()
+    
+    my_label=Label(root,
+                   text=Efileread)
+    my_label.grid()    
+
+"""
+
+
+    
+    
+def BWA_run():
+    
+    
+    
+    
+        try:
+            os.system('mkdir mapping')#create directory
+        except:
+            print()
+        os.system('cd mapping/')#go into directory
+        
+        
+        try:
+            os.system('mkdir index')#make index directory
+        except:
+            print()
+        
+        os.system('mv '+ BRefFileName +' index/')#move fasta file to index
+        os.system('bwa index index/'+BRefFileName)
+        
+        g_BAM = fd.askdirectory(title="Please select output pathway")
+ 
+        os.system('bwa mem -t 8 index/'+ BRefFileName+' '+BFileName+' |samtools sort -o '+g_BAM+'.bam')
+        
+        l_inputString = 'bwa index '+g_FASTA
+        print(l_inputString)
+        os.system('bwa index BWA/Seq/reference.fasta')
+        g_BAM = fd.askdirectory(title="Please select output pathway")
+            
+def stats():
+      os.system('samtools stats output.sorted.bam | grep ^SN| cut -f 2- > samtools.stats.txt')
+      os.system('bamtools stats -in output.sorted.bam > bamtools.stats.txt')
+
+
+def open_txt():
+    text_file = filedialog.askopenfile(initialdr="C:/home", title= "Open Text", filetypes=(("Text Files", "*.txt"),))
+    text_file = open(text_file, 'r')
+    fileread= text_file.read()
+    
+    my_text.insert(END, fileread)
+    text_file.close()
+  
+  
+my_text = Text(root, 800, 200, font=("Helvetica", 16))
+my_text.grid(pady=20)
+
+open_button = Button(root, text="Open Stats", command=open_txt)
+open_button.grid(pady=20)
+
+close_button = Button(root, text="Close", command= root.quit)
+close_button.grid(pady=20)
+
+
+
+
+#creating the buttons for the search functions
+
+ref_search_button=Button(root, 
+                     text="file search", 
+                     command=ref_search)
+search_button=Button(root, 
+                     text="file search", 
+                     command=search)
+ref_esearch_button=Button(root, 
+                      text="entrez search",)
+                      #command=ref_E_search)
+esearch_button=Button(root, 
+                      text="entrez search",) 
+                     #command=E_search)
+BWA_button=Button(root, 
+                     text="run", 
+                     command=BWA_run)
+button_exit =Button(root,
+                    text="Exit", 
+                    command=root.destroy)
+
+#organizing the buttons on the grid on the window
+ref_search_button.grid(row=1,
+                   column=2)
+ref_esearch_button.grid(row=0,
+                    column=2)
+
+search_button.grid(row=3,
+                   column=2)
+esearch_button.grid(row=2,
+                    column=2)
+button_exit.grid(row=5,
+                 column=3)
+BWA_button.grid(row=5,
+                column=2)
+
+#makes it so it will constantly loop over program
+root.mainloop()
