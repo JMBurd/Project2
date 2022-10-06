@@ -1,0 +1,190 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Sep 25 05:13:59 2022
+
+@author: John, Stephanie
+"""
+from tkinter import *
+import os
+#SeqIO will allow for parseing of files so we can do multiple seqeunces
+from Bio import SeqIO
+#allows for look up from entrez need to feed database for lookup
+from Bio import Entrez
+from tkinter import filedialog as fd
+root=Tk()
+
+#Set global variables
+g_FASTA = 'reference.fasta'
+g_SAM = 'output.sam'
+g_BAM = 'output.bam'
+
+#places a entry box on the screen
+e = Entry(root, width=50, borderwidth="5", state=DISABLED)
+e.grid(row=0,column=1)
+#this will place default text in the box
+e.insert(0,"gene ID for look up")
+#e.get() is used to take the entry and use it
+e.get()
+val=StringVar()
+val.set("nucleotide")
+#this needs to in intalized with the type of the variable intvar() for interger
+drop = OptionMenu(root,val, 
+                  "nucleotide",
+                  "protein")
+drop.grid(row=0,column=0)
+
+
+
+def BWA():
+
+    #create -n bwa bwa #create environment
+    #env list #show the environments you can use (activate these for conda)
+    #activate bwa 
+	#bwa #check if it's working
+
+    #os.system('mkdir mapping') #create directory
+    #os.system('cd mapping/') #go into directory
+    #Make contained directory for all newly created files
+    #os.system('cd')
+    #try:
+        #os.system('mkdir BWA')
+        #os.system('mkdir BWA/Seq')
+        #os.system('mkdir BWA/SAM')
+        #os.system('mkdir BWA/BAM')
+        #os.system('mv BWA ~/Documents')
+    #except:
+        #print("Files already exist")
+
+    g_FASTA = str(e.get())
+    
+    l_inputString = 'bwa index '+g_FASTA
+    print(l_inputString)
+    #os.system('bwa index BWA/Seq/reference.fasta')
+    os.system('bwa index reference.fasta')
+    g_BAM = fd.askdirectory(title="Please select output pathway")
+
+    print("Entry value = " + g_FASTA)
+
+    os.system('wget ' + g_FASTA)
+
+    #os.system('bwa mem -t 8 reference.fasta BWA/Seq/SRR2093871_1.fastq.gz BWA/Seq/SRR2093871_2.fastq.gz |samtools sort -o BWA/BAM/output.sorted.bam')
+
+    os.system('bwa mem -t 8 reference.fasta SRR2093871_1.fastq.gz |samtools sort -o output.sorted.bam')
+
+    #Pull run stats from output file
+    root.title("BAM Stats")
+    root.geometry("1000x1050")
+
+    def stats():
+      os.system('samtools stats output.sorted.bam | grep ^SN| cut -f 2- > samtools.stats.txt')
+      os.system('bamtools stats -in output.sorted.bam > bamtools.stats.txt')
+
+
+    def open_txt():
+      text_file = filedialog.askopenfile(initialdr="C:/home", title= "Open Text", filetypes=(("Text Files", "*.txt"),))
+      text_file = open(text_file, 'r')
+      fileread= text_file.read()
+  
+      my_text.insert(END, fileread)
+      text_file.close()
+  
+  
+    my_text = Text(root, height = 10)
+    #my_text.pack(pady=20)
+
+    open_button = Button(root, text="Open Stats", command= open_txt)
+    #open_button.pack(pady=20)
+
+    close_button = Button(root, text="Close", command= root.quit)
+    #close_button.pack(pady=20)
+
+    root.mainloop()
+    exit(0)
+
+#download the SRR files (paired end reads) from ncbi but I can't do this on my laptop so using the 619 demo ones as example
+        #os.system('wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR209/001/SRR2093871/SRR2093871_1.fastq.gz')
+        #os.system('wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR209/001/SRR2093871/SRR2093871_2.fastq.gz')
+
+ 
+
+    
+
+def E_search():
+    db_id=val.get()
+    seq_id=e.get()
+    handle=Entrez.efetch(db=db_id, 
+                         id=seq_id,
+                         rettype='fasta', 
+                         retmode='text')
+    my_label=Label(root,
+                   text=handle.read())
+    my_label.grid()    
+def search():
+    filetype = (
+    ('fasta files', '*.fasta'),
+    ('All files', '*.*'))
+    root.filename = fd.askopenfilename(
+        title="select a file",
+        filetypes = filetype)
+    
+    file=open(root.filename, 'r')
+    g_FASTA = os.path.abspath(file.name)
+    print(g_FASTA)
+    fileread=file.read()
+    file.close()
+    alabel=str(Label(root, text=fileread).grid()) + os.getcwd()
+#creating the buttons for the search functions
+esearch_button = Button(root, 
+                      text="entrez search", 
+                      command=E_search, state=DISABLED)
+search_button = Button(root, 
+                     text="file search", 
+                     command=search, state=DISABLED)
+button_exit = Button(root,
+                    text="Exit", 
+                    command=root.destroy)
+button_run = Button(root,
+                    text="Run",
+                    command=BWA)
+            
+#organizing the buttons on the grid on the window
+search_button.grid(row=1,
+                   column=2)
+esearch_button.grid(row=0,
+                    column=2)
+button_exit.grid(row=3,
+                 column=3)
+button_run.grid(row=3,
+                 column=2)
+
+#create radio buttons for file input or download
+def sel():
+    if (var.get() == 1):
+        esearch_button['state'] = NORMAL
+        search_button['state'] = NORMAL
+        e['state'] = DISABLED
+
+    elif (var.get() == 2):
+        e['state'] = NORMAL
+        esearch_button['state'] = DISABLED
+        search_button['state'] = DISABLED        
+
+var = IntVar()
+
+R1 = Radiobutton(root, text="Upload FASTA", variable=var, value=1,
+                  command=sel)
+R1.grid(row=1,
+        column=1)
+
+R2 = Radiobutton(root, text="Download FASTA", variable=var, value=2, anchor = W,
+                  command=sel)
+R2.grid(row=2,
+        column=1)
+
+selectedButton = var.get()
+
+#R3.pack( anchor = W)
+
+#makes it so it will constantly loop over program
+root.mainloop()
+
