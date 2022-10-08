@@ -1,0 +1,25 @@
+from tkinter import *
+import os
+
+
+root = Tk()
+root.title("BWA'")
+root.geometry("400x400")
+
+
+
+
+def forced_pair():
+       os.system('bwa mem -U 8 Documents/ref.fasta SRR2093871_1.fastq.gz SRR2093871_2.fastq.gz > forced_pair.fasta')
+
+def pair_end():
+    os.system('bwa mem -P Documents/ref.fasta SRR2093871_1.fastq.gz SRR2093871_2.fastq.gz > pair-end.fasta')
+
+b1_button = Checkbutton(root, text="Forced Pair", command=forced_pair)
+b1_button.pack()
+b2_button = Checkbutton(root, text="Pair-End", command= pair_end)
+b2_button.pack()
+b3_button = Button(root, text="Cancel", command=exit)
+b3_button.pack()
+
+root.mainloop()
