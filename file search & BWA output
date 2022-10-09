@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 
+
+
+@author: John
 """
 from tkinter import *
 #SeqIO will allow for parseing of files so we can do multiple seqeunces
@@ -9,48 +12,38 @@ from Bio import SeqIO
 from Bio import Entrez
 from tkinter import filedialog as fd
 from Bio.Sequencing.Applications import BwaIndexCommandline
+from PIL import ImageTk, Image
+import threading #to use threading command=threading.thread(target=function).start()
 import os
 
+from tkinter import messagebox as mb
+
 #Set global variables
+global g_FASTA
+global g_SAM
+global g_BAM
+global g_url
+global g_accession
+global filename
+#set intial values to the global variables
+g_url = "null"
+g_accession = "null"
 g_FASTA = 'reference.fasta'
 g_SAM = 'output.sam'
 g_BAM = 'output.bam'
-
-
-global filename
 filename="reference gene ID"
 
 
 root=Tk()
+root.title("BWA")
+#root.iconbitmap('/home/jburd/anaconda3/test_programs/unnamed.png') 
+my_img=ImageTk.PhotoImage(Image.open("unnamed.png").resize((600,200))) #image was to big have to resize to fit
+my_label=Label(image=my_img)
+my_label.grid(row=0,column=0, ipady=0.5, columnspan=5)
+my_label2=Label(text=" ")
+my_label2.grid(row=0,column=0)
 
-
-#places a entry box on the screen
-refe = Entry(root, width=50, borderwidth="5")
-refe.grid(row=0,column=1)
-#this will place default text in the box
-refe.insert(0,filename)
-#e.get() is used to take the entry and use it
-refe.get()
-
-e = Entry(root, width=50, borderwidth="5")
-e.grid(row=2,column=1)
-#this will place default text in the box
-e.insert(0,"gene ID ")
-#e.get() is used to take the entry and use it
-e.get()
-
-
-val=StringVar()
-val.set("nucleotide")
-
-#this needs to in intalized with the type of the variable intvar() for interger
-drop = OptionMenu(root,val, 
-                  "nucleotide",
-                  "protein")
-drop.grid(row=0,column=0)
-
-
-
+#start of defineing the different functions
 def search():
     
     global BFileName
@@ -63,85 +56,63 @@ def search():
     root.filename = fd.askopenfilename(
         title="select a file",
         filetypes = filetype)
-    
-    
     BFileName = os.path.basename(root.filename)
-        
     #this is a test print out and not needed
     alabel=Label(root, text=BFileName).grid()
-    
     
 def ref_search():
     
     global BRefFileName
-    
+
     filetype = (
     ('fasta files', '*.fasta'),
     ('All files', '*.*'))
-    
-    
     root.filename = fd.askopenfilename(
-       
         title="select a file",
         filetypes = filetype)
-    
     BRefFileName = os.path.basename(root.filename)
-    
     #this is a test print out and not needed
     alabel=Label(root, text=BRefFileName).grid()
-    
-    
-"""    
 
-def ref_E_search():
-    db_id=val.get()
-    seq_id=e.get()
-    
-    globalrefhandle
-    
-    handle=Entrez.efetch(db=db_id, 
-                         id=seq_id,
-                         rettype='fasta', 
-                         retmode='text')
-    global  refEfileread
-    refEfileread=handle.read()
-    
-    my_label=Label(root,
-                   text= refEfileread)
-    my_label.grid()    
-    
 def E_search():
+    Entrez.email="jmburd287@gmail.com"
     db_id=val.get()
     seq_id=e.get()
+    
     handle=Entrez.efetch(db=db_id, 
                          id=seq_id,
                          rettype='fasta', 
                          retmode='text')
-    global Efileread
-    
-    Efileread=handle.read()
-    
-    my_label=Label(root,
-                   text=Efileread)
-    my_label.grid()    
+    #record=SeqIO.parse(handle,'fasta') to do multiple files then read off in a array
+    record=SeqIO.read(handle,'fasta')
+    outputname=record.id+'.fasta' #record.id gives accession number
+    SeqIO.write(record,outputname,'fasta')
 
-"""
+def wget_run():
+    if g_url=="null":
+        react=mb.askokcancel("no URL added", "Enter a URL")
+        #Label(root,text=react).grid()
+    else:
+        os.system("wget "+g_url)
+    return
 
-
-    
+def sra_run():
+    if g_accession=="null":
+        react=mb.askokcancel("no accession number added", "Enter a accession number")
+        #Label(root,text=react).grid()
+    else:
+        os.system("prefetch "+g_accession)     
+        os.system("fasterq-dump "+g_accession)
+    return
     
 def BWA_run():
-    
-    
-    
-    
+
         try:
             os.system('mkdir mapping')#create directory
         except:
             print()
         os.system('cd mapping/')#go into directory
-        
-        
+
         try:
             os.system('mkdir index')#make index directory
         except:
@@ -149,53 +120,101 @@ def BWA_run():
         
         os.system('mv '+ BRefFileName +' index/')#move fasta file to index
         os.system('bwa index index/'+BRefFileName)
-        
         g_BAM = fd.askdirectory(title="Please select output pathway")
- 
         os.system('bwa mem -t 8 index/'+ BRefFileName+' '+BFileName+' |samtools sort -o '+g_BAM+'.bam')
-        
+
+
+#this is defineing all the parts that are in the root/main part of the gui
+wget_frame=LabelFrame(root, text="wget file download", padx=20, pady=20)
+sra_frame=LabelFrame(root, text="SRA file download",padx=20, pady=20)
+E_frame=LabelFrame(root, text="Etrenz download",padx=20, pady=20)
+ref_frame=LabelFrame(root, text="set reference sequence", padx=20, pady=20)
+seq_frame=LabelFrame(root, text="set mapping sequence",padx=20, pady=20)
+seq_frame2=LabelFrame(root, text="set 2nd mapping sequence",padx=20, pady=20)
+parm_frame=LabelFrame(root, text="check if you want to change parameters",padx=20, pady=20)
+
+
+#griding the frames
+wget_frame.grid(row=1,column=1)
+sra_frame.grid(row=2,column=1)
+E_frame.grid(row=3,column=1)
+ref_frame.grid(row=4,column=1)
+seq_frame.grid(row=5,column=1)
+seq_frame2.grid(row=6,column=1)
+parm_frame.grid(row=7,column=1)
+
+
+
+#places a entry box on the screen
+refe = Entry(ref_frame, width=50, borderwidth="5")
+refe.grid(row=0,column=1)
+#this will place default text in the box
+refe.insert(0,filename)
+#e.get() is used to take the entry and use it
+refe.get()
+
+e = Entry(seq_frame, width=50, borderwidth="5")
+e.grid(row=0,column=1)
+#this will place default text in the box
+e.insert(0,"gene ID ")
+#e.get() is used to take the entry and use it
+e.get()
+
+e = Entry(E_frame, width=50, borderwidth="5")
+e.grid(row=0,column=1)
+#this will place default text in the box
+e.insert(0,"gene ID ")
+#e.get() is used to take the entry and use it
+e.get()
+
+e1 = Entry(sra_frame, width=50, borderwidth="5")
+e1.grid(row=0,column=0)
+#this will place default text in the box
+e1.insert(0,"Accession ID")
+#e.get() is used to take the entry and use it
+g_accession=e1.get()
+
+sra_button=Button(sra_frame, 
+                     text="Download", 
+                     command=sra_run)
+sra_button.grid(row=0, column=1)
+
+e2 = Entry(wget_frame, width=50, borderwidth="5")
+e2.grid(row=0,column=0)
+#this will place default text in the box
+e2.insert(0,"wget URL")
+#e.get() is used to take the entry and use it
+g_url=e2.get()
+
+
+
+
+#making drop down menu
+val=StringVar()
+val.set("nucleotide")
+
+#this needs to in intalized with the type of the variable intvar() for interger
+drop = OptionMenu(E_frame,val, 
+                  "nucleotide",
+                  "protein")
+drop.grid(row=0,column=0)
+
+
+
         
             
-def stats():
-      os.system('samtools stats output.sorted.bam | grep ^SN| cut -f 2- > samtools.stats.txt')
-      os.system('bamtools stats -in output.sorted.bam > bamtools.stats.txt')
-
-
-def open_txt():
-    text_file = filedialog.askopenfile(initialdr="C:/home", title= "Open Text", filetypes=(("Text Files", "*.txt"),))
-    text_file = open(text_file, 'r')
-    fileread= text_file.read()
-    
-    my_text.insert(END, fileread)
-    text_file.close()
-  
-  
-    my_text = Text(root, 800, 200, font=("Helvetica", 16))
-    my_text.grid(pady=20)
-    
-    open_button = Button(root, text="Open Stats", command=open_txt)
-    open_button.grid(pady=20)
-    
-    close_button = Button(root, text="Close", command= root.quit)
-    close_button.grid(pady=20)
-
-
-
-
 #creating the buttons for the search functions
 
-ref_search_button=Button(root, 
+ref_search_button=Button(ref_frame, 
                      text="file search", 
                      command=ref_search)
-search_button=Button(root, 
+search_button=Button(seq_frame, 
                      text="file search", 
                      command=search)
-ref_esearch_button=Button(root, 
-                      text="entrez search",)
-                      #command=ref_E_search)
-esearch_button=Button(root, 
-                      text="entrez search",) 
-                     #command=E_search)
+
+esearch_button=Button(E_frame, 
+                      text="entrez search", 
+                      command=E_search)
 BWA_button=Button(root, 
                      text="run", 
                      command=BWA_run)
@@ -204,19 +223,25 @@ button_exit =Button(root,
                     command=root.destroy)
 
 #organizing the buttons on the grid on the window
-ref_search_button.grid(row=1,
+ref_search_button.grid(row=0,
                    column=2)
-ref_esearch_button.grid(row=0,
-                    column=2)
 
-search_button.grid(row=3,
+search_button.grid(row=0,
                    column=2)
-esearch_button.grid(row=2,
+esearch_button.grid(row=0,
                     column=2)
-button_exit.grid(row=5,
+button_exit.grid(row=6,
                  column=3)
-BWA_button.grid(row=5,
+BWA_button.grid(row=6,
                 column=2)
+
+
+
+
+wget_button=Button(wget_frame, 
+                     text="Download", 
+                     command=wget_run)
+wget_button.grid(row=0, column=1)
 
 #makes it so it will constantly loop over program
 root.mainloop()
