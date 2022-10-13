@@ -1,8 +1,13 @@
+
 import tkinter as tk
 import sys
 import subprocess
 import threading
-
+from Bio import SeqIO
+from Bio import Entrez
+from Bio.Sequencing.Applications import BwaIndexCommandline
+import os
+import time
 # --- classes ---
 
 class Redirect():
@@ -16,56 +21,81 @@ class Redirect():
         if self.autoscroll:
             self.widget.see("end")  # autoscroll
         
-    #def flush(self):
-    #    pass
 
 # --- functions ---
 
-def run():
-    threading.Thread(target=test).start()
+def run_Main():
+    t_Main = ""
+    t_Main = threading.Thread(target=BWA_GUI, daemon=False, name=t_Main).start()
 
-def test():
+def bwa_thread():
+    t_bwa1 = ""
+    
+    t_bwa1 = threading.Thread(target=BWA_run, daemon=True, name=t_bwa1).start()
+    t_bwa1.join()
+def out_pnt(X):
+    while True:
+        out_txt = X.stdout.readline()
+        if out_txt == '':
+            print("Command Complete")
+            break
+        if out_txt:
+            print(out_txt.strip())
+
+def out_Capture(inp_String, t_Delay):
+    X = subprocess.Popen(inp_String, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, bufsize=1, text=True, shell=True)  
+    
+    while X.poll():
+        out_pnt(X)
+        time.sleep(t_Delay)
+    else:
+        out_pnt(X)
+        
+# ------- example function ------
+def BWA_run():
     print("Thread: start")
+    out_Capture('ls', 0.00)
+    l_Input = 'bwa index reference.fasta'
+    out_Capture(l_Input, 0.00)
+       
+    l_Input = 'bwa mem -t 1 reference.fasta SRR2093871_1.fastq.gz |samtools sort -o sorted.bam'
+    out_Capture(l_Input, 10)
 
-    p = subprocess.Popen("ping -c 4 stackoverflow.com".split(), stdout=subprocess.PIPE, bufsize=1, text=True)
-    while p.poll() is None:
-        msg = p.stdout.readline().strip() # read a line from the process output
-        if msg:
-            print(msg)
+ 
 
+    #p = subprocess.Popen('bwa mem -t 8 reference.fasta SRR2093871_1.fastq.gz |samtools sort -o output.bam', stdout=subprocess.PIPE, bufsize=1, text=True, shell=True)
     print("Thread: end")
 
-# --- main ---    
+# --- Example UI ---
 
-root = tk.Tk()
+def BWA_GUI():
+    root2 = tk.Tk()
 
 # - Frame with Text and Scrollbar -
 
-frame = tk.Frame(root)
-frame.pack(expand=True, fill='both')
+    frame = tk.Frame(root2)
+    frame.pack(expand=True, fill='both')
 
-text = tk.Text(frame)
-text.pack(side='left', fill='both', expand=True)
+    text = tk.Text(frame)
+    text.pack(side='left', fill='both', expand=True)
 
-scrollbar = tk.Scrollbar(frame)
-scrollbar.pack(side='right', fill='y')
+    scrollbar = tk.Scrollbar(frame)
+    scrollbar.pack(side='right', fill='y')
 
-text['yscrollcommand'] = scrollbar.set
-scrollbar['command'] = text.yview
+    text['yscrollcommand'] = scrollbar.set
+    scrollbar['command'] = text.yview
 
-old_stdout = sys.stdout    
-sys.stdout = Redirect(text)
+    old_stdout = sys.stdout    
+    sys.stdout = Redirect(text)
 
 # - rest -
 
-button = tk.Button(root, text='TEST', command=run)
-button.pack()
+    button = tk.Button(root2, text='TEST', command=bwa_thread)
+    button.pack()
 
-root.mainloop()
+    root2.mainloop()
+    sys.stdout = old_stdout
+    
 
-# - after close window -
 
-sys.stdout = old_stdout
-
-#Source code linked, gonna work on imedding this into our script. This is also a good example of a scroll bar:D
-#https://stackoverflow.com/questions/62335989/redirect-terminal-output-to-tkinter
+run_Main()
