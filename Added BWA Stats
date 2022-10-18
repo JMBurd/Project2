@@ -1,0 +1,362 @@
+from tkinter import *
+import sys
+#SeqIO will allow for parseing of files so we can do multiple seqeunces
+from Bio import SeqIO
+#allows for look up from entrez need to feed database for lookup
+from Bio import Entrez
+from tkinter import filedialog as fd
+from Bio.Sequencing.Applications import BwaIndexCommandline
+#from PIL import ImageTk, Image
+import threading #to use threading command=threading.thread(target=function).start()
+import os
+import time
+import subprocess
+from tkinter import messagebox as mb
+
+
+#Set global variables
+global g_FASTA
+global g_SAM
+global g_BAM
+global g_url
+global g_accession
+global filename
+#set intial values to the global variables
+g_url = "null"
+g_accession = "null"
+g_FASTA = 'reference.fasta'
+g_SAM = 'output.sam'
+g_BAM = 'output.bam'
+filename="reference gene ID"
+
+
+
+#define threading Classes
+class out_Text():
+
+    def __init__(self, widget, autoscroll=True):
+        self.widget = widget
+        self.autoscroll = autoscroll
+
+    def write(self, text):
+        self.widget.insert('end', text)
+        if self.autoscroll:
+            self.widget.see("end")  # autoscroll
+
+#start of defineing the different functions
+# --- functions ---
+#---------------------thread functions---------------------------
+def MAIN_thread():
+    t_Main = ""
+    t_Main = threading.Thread(target=BWA_GUI, daemon=False, name=t_Main).start()
+
+def BWA_thread():
+    t_bwa1 = ""
+    t_bwa1 = threading.Thread(target=BWA_run, daemon=True, name=t_bwa1).start()
+    
+#---------------------terminal functions--------------------------
+def out_pnt(X):
+    while True:
+        out_txt = X.stdout.readline()
+        if out_txt == '':
+            print("Command Complete")
+            break
+        if out_txt:
+            print(out_txt.strip())
+
+def out_Capture(inp_String, t_Delay):
+    X = subprocess.Popen(inp_String, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, bufsize=1, text=True, shell=True)  
+    while X.poll():
+        out_pnt(X)
+        time.sleep(t_Delay)
+    else:
+        out_pnt(X)
+        
+#----------------------GUI functions------------------------------
+def search():
+    
+    global BFileName
+    
+    filetype = (
+    ('grep files', '*.gz'),
+    ('fasta files', '*.fasta'),
+    ('All files', '*.*'))
+
+    root.filename = fd.askopenfilename(
+        title="select a file",
+        filetypes = filetype)
+    BFileName = os.path.basename(root.filename)
+    #this is a test print out and not needed
+    alabel=Label(root, text=BFileName).grid()
+    
+def ref_search():
+    
+    global BRefFileName
+
+    filetype = (
+    ('fasta files', '*.fasta'),
+    ('All files', '*.*'))
+    root.filename = fd.askopenfilename(
+        title="select a file",
+        filetypes = filetype)
+    BRefFileName = os.path.basename(root.filename)
+    #this is a test print out and not needed
+    alabel=Label(root, text=BRefFileName).grid()
+
+def E_search():
+    Entrez.email="jmburd287@gmail.com"
+    db_id=val.get()
+    seq_id=e.get()
+    
+    handle=Entrez.efetch(db=db_id, 
+                         id=seq_id,
+                         rettype='fasta', 
+                         retmode='text')
+    #record=SeqIO.parse(handle,'fasta') to do multiple files then read off in a array
+    record=SeqIO.read(handle,'fasta')
+    outputname=record.id+'.fasta' #record.id gives accession number
+    SeqIO.write(record,outputname,'fasta')
+
+def wget_run():
+    if g_url=="null":
+        react=mb.askokcancel("no URL added", "Enter a URL")
+        #Label(root,text=react).grid()
+    else:
+        os.system("wget "+g_url)
+    return
+
+def sra_run():
+    if g_accession=="null":
+        react=mb.askokcancel("no accession number added", "Enter a accession number")
+        #Label(root,text=react).grid()
+    else:
+        out_Capture("prefetch "+g_accession,0.5)     
+        out_Capture("fasterq-dump "+g_accession,0.5)
+    return   
+    
+def BWA_run():
+
+        #try:
+        #    out_Capture('mkdir mapping',0.0)
+        #except:
+        #    print()
+        #out_Capture('cd mapping/',0.0)
+        #try:
+        #    out_Capture('mkdir index',0.0)
+        #except:
+        #    print()
+        
+        #out_Capture('mv '+ BRefFileName +' index/',0.0)
+        out_Capture('bwa index reference.fasta',1)
+        g_BAM = fd.askdirectory(title="Please select your output pathway")
+        out_Capture('bwa mem -t 1 reference.fasta SRR2093871_1.fastq.gz |samtools sort -o sorted.bam',0.5)
+
+
+def stats():
+  os.system('samtools stats output.sorted.bam | grep ^SN| cut -f 2- > samtools.stats.txt')
+  os.system('bamtools stats -in output.sorted.bam > bamtools.stats.txt')
+
+
+def open_txt():
+  root = Tk()
+  text_file = filedialog.askopenfile(initialdr="C:/home", title= "Open Text", filetypes=(("Text Files", "*.txt"),))
+  text_file = open(text_file, 'r')
+  fileread= text_file.read()
+  
+  my_text.insert(END, fileread)
+  text_file.close()
+  
+  
+  my_text = Text(root, width=800, height=200)
+
+
+
+
+def BWA_GUI():
+    root=Tk()
+    root.title("BWA")
+    #root.iconbitmap('/home/jburd/anaconda3/test_programs/unnamed.png') 
+    #my_img=ImageTk.PhotoImage(Image.open("unnamed.png").resize((600,200))) #image was to big have to resize to fit
+    #my_label=Label(image=my_img)
+    #my_label.grid(row=0,column=0, ipady=0.5, columnspan=5)
+    #my_label2=Label(text=" ")
+    #my_label2.grid(row=0,column=0)
+
+    #this is defineing all the parts that are in the root/main part of the gui
+    wget_frame=LabelFrame(root, text="wget file download", padx=20, pady=20)
+    sra_frame=LabelFrame(root, text="SRA file download",padx=20, pady=20)
+    E_frame=LabelFrame(root, text="Etrenz download",padx=20, pady=20)
+    ref_frame=LabelFrame(root, text="set reference sequence", padx=20, pady=20)
+    seq_frame=LabelFrame(root, text="set mapping sequence",padx=20, pady=20)
+    seq_frame2=LabelFrame(root, text="set 2nd mapping sequence",padx=20, pady=20)
+    parm_frame=LabelFrame(root, text="check if you want to change parameters",padx=20, pady=20)
+    text_frame=LabelFrame(root, text="Console", padx=20, pady=20)
+    
+
+    #griding the frames
+    wget_frame.grid(row=1,column=1)
+    sra_frame.grid(row=2,column=1)
+    E_frame.grid(row=3,column=1)
+    ref_frame.grid(row=4,column=1)
+    seq_frame.grid(row=5,column=1)
+    seq_frame2.grid(row=6,column=1)
+    parm_frame.grid(row=7,column=1)
+    text_frame.grid(row=8,column=1)
+
+
+
+    #places a entry box on the screen
+    refe = Entry(ref_frame, width=50, borderwidth="5", state=DISABLED)
+    refe.grid(row=0,column=1)
+    #this will place default text in the box
+    refe.insert(0,filename)
+    #e.get() is used to take the entry and use it
+    refe.get()
+
+    e = Entry(seq_frame, width=50, borderwidth="5", state=DISABLED)
+    e.grid(row=0,column=1)
+    #this will place default text in the box
+    e.insert(0,"gene ID ")
+    #e.get() is used to take the entry and use it
+    e.get()
+
+    e0 = Entry(E_frame, width=50, borderwidth="5", state=DISABLED)
+    e0.grid(row=0,column=1)
+    #this will place default text in the box
+    e0.insert(0,"gene ID ")
+    #e.get() is used to take the entry and use it
+    e0.get()
+
+    e1 = Entry(sra_frame, width=50, borderwidth="5", state=DISABLED)
+    e1.grid(row=0,column=0)
+    #this will place default text in the box
+    e1.insert(0,"Accession ID")
+    #e.get() is used to take the entry and use it
+    g_accession=e1.get()
+
+    sra_button=Button(sra_frame, 
+                         text="Download", 
+                         command=sra_run, state = DISABLED)
+    sra_button.grid(row=0, column=1)
+
+    e2 = Entry(wget_frame, width=50, borderwidth="5", state=DISABLED)
+    e2.grid(row=0,column=0)
+    #this will place default text in the box
+    e2.insert(0,"wget URL")
+    #e.get() is used to take the entry and use it
+    g_url=e2.get()
+
+
+
+
+    #making drop down menu
+    val=StringVar()
+    val.set("nucleotide")
+
+    #this needs to in intalized with the type of the variable intvar() for interger
+    drop = OptionMenu(E_frame,val, 
+                      "nucleotide",
+                      "protein")
+    drop.grid(row=0,column=0)
+
+    #create the console and sroll bar
+    text = Text(text_frame)
+    text.pack(side='left', fill='y')
+    scrollbar = Scrollbar(text_frame)
+    scrollbar.pack(side='right',fill='y')
+    text['yscrollcommand'] = scrollbar.set
+    scrollbar['command'] = text.yview
+    
+    old_stdout=sys.stdout
+    sys.stdout = out_Text(text)
+        
+            
+    #creating the buttons for the search functions
+
+    ref_search_button=Button(ref_frame, 
+                         text="file search", 
+                         command=ref_search, state=DISABLED)
+    search_button=Button(seq_frame, 
+                         text="file search", 
+                         command=search, state=DISABLED)
+    
+    esearch_button=Button(E_frame, 
+                          text="entrez search", 
+                          command=E_search, state=DISABLED)
+    BWA_button=Button(root, 
+                         text="Run", 
+                         command=BWA_thread, state=DISABLED)
+    button_exit =Button(root,
+                        text="Exit", 
+                        command=root.destroy)
+    open_button = Button(root, text="Open Stats", command= open_txt)
+
+    #organizing the buttons on the grid on the window
+    ref_search_button.grid(row=0,
+                       column=2)
+
+    search_button.grid(row=0,
+                       column=2)
+    esearch_button.grid(row=0,
+                        column=2)
+    button_exit.grid(row=6,
+                     column=3)
+    BWA_button.grid(row=6,
+                    column=1)
+    open_button.grid(row = 7, 
+    		   column =1)
+
+    def sel():
+    
+        if (var.get() == 1):
+            wget_button['state'] = DISABLED
+            sra_button['state'] = DISABLED
+            esearch_button['state'] = NORMAL
+            search_button['state'] = NORMAL
+            ref_search_button['state'] = NORMAL
+            e['state'] = NORMAL
+            refe['state'] = NORMAL
+            e0['state'] = NORMAL
+            e1['state'] = DISABLED
+            e2['state'] = DISABLED
+
+        elif (var.get() == 2):
+            wget_button['state'] = NORMAL
+            sra_button['state'] = NORMAL
+            refe['state'] = DISABLED 
+            e0['state'] = DISABLED
+            e['state'] = NORMAL
+            e1['state'] = NORMAL
+            e2['state'] = NORMAL
+            esearch_button['state'] = DISABLED
+            search_button['state'] = NORMAL
+            ref_search_button['state'] = DISABLED
+
+    var = IntVar()
+
+    R1 = Radiobutton(root, text="Upload FASTA", variable=var, value=1,
+                      command=sel)
+
+
+    R2 = Radiobutton(root, text="Download FASTA", variable=var, value=2, anchor = W,
+                      command=sel)
+
+
+    selectedButton = var.get()
+    
+    R1.grid(row=2,
+            column=0)
+    R2.grid(row=3,
+            column=0)
+
+    wget_button=Button(wget_frame, 
+                         text="Download", 
+                         command=wget_run, state = DISABLED)
+    wget_button.grid(row=0, column=1)  
+
+
+    #makes it so it will constantly loop over program
+    root.mainloop()
+    sys.stout = oldstoud
+
+MAIN_thread()
