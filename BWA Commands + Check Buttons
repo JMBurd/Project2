@@ -24,12 +24,19 @@ b3_button.pack()
 
 root.mainloop()
 
-#Steph's buttons 
-checkbutton1 = ttk.Checkbutton(forced_pair)
-checkbutton1.configure(text='Forced Pair')
-checkbutton1.grid(column=0, row=21, sticky="w")
-checkbutton2 = ttk.Checkbutton(pair_end)
-checkbutton2.configure(text='Pair-End')
-checkbutton2.grid(column=0, row=22, sticky="w")
+#-----Code with buttons----#
 
+    #BAM mem command buttons
+    def forced_pair():
+       os.system('bwa mem -U 8 Documents/ref.fasta SRR2093871_1.fastq.gz SRR2093871_2.fastq.gz > forced_pair.fasta')
 
+    var = IntVar()
+    checkbutt1 = Checkbutton(root, text="Forced Pair", variable = var, command = forced_pair)
+    checkbutt1.grid(column=0,row=4)
+    
+    def pair_end():
+        os.system('bwa mem -P Documents/ref.fasta SRR2093871_1.fastq.gz SRR2093871_2.fastq.gz > pair-end.fasta')
+
+    var = IntVar()
+    checkbutt2 = Checkbutton(root, text="Pair End", variable = var, command = pair_end)
+    checkbutt2.grid(column=0,row=5)
