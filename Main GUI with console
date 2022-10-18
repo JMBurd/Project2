@@ -290,4 +290,19 @@ def BWA_GUI():
     #makes it so it will constantly loop over program
     root.mainloop()
     sys.stout = oldstoud
-MAIN_thread()
+    
+    
+     #BAM mem command buttons
+    def forced_pair():
+       os.system('bwa mem -U 8 Documents/ref.fasta SRR2093871_1.fastq.gz SRR2093871_2.fastq.gz > forced_pair.fasta')
+
+    var = IntVar()
+    checkbutt1 = Checkbutton(root, text="Forced Pair", variable = var, command = forced_pair)
+    checkbutt1.grid(column=0,row=4)
+    
+    def pair_end():
+        os.system('bwa mem -P Documents/ref.fasta SRR2093871_1.fastq.gz SRR2093871_2.fastq.gz > pair-end.fasta')
+
+    var = IntVar()
+    checkbutt2 = Checkbutton(root, text="Pair End", variable = var, command = pair_end)
+    checkbutt2.grid(column=0,row=5)MAIN_thread()
