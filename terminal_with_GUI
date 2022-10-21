@@ -23,7 +23,7 @@ from PIL import ImageTk, Image
 from tkinter import messagebox as mb
 
 #-----------------------------------------------------------------------------
-# --- Global Varables for buttons ---
+# --- Global Varables for button functions ---
 #-----------------------------------------------------------------------------
 
 global g_FASTA
@@ -95,6 +95,9 @@ def out_Capture(inp_String, t_Delay):
 # ------- example function ------
 #-----------------------------------------------------------------------------
 
+
+
+
 #-----------------------------------------------------------------------------
 # --- Example UI ---
 #-----------------------------------------------------------------------------
@@ -102,17 +105,17 @@ def out_Capture(inp_String, t_Delay):
 def BWA_GUI():
     root = tk.Tk()
     root.title("BWA")
-    #root.iconbitmap('/home/jburd/anaconda3/test_programs/unnamed.png') 
-    #my_img=ImageTk.PhotoImage(Image.open("unnamed.png").resize((600,200))) #image was to big have to resize to fit
+    #root.iconbitmap('/home/jburd/anaconda3/test_programs/unnamed.png')
+    #my_img = ImageTk.PhotoImage(image=PIL.Image.fromarray("unnamed.png"))
+    #my_img=ImageTk.PhotoImage(Image.open(r"unnamed.png").resize((600,200))) #image was to big have to resize to fit
     #my_label=Label(image=my_img)
     #my_label.grid(row=0,column=0, ipady=0.5, columnspan=5)
     #my_label2=Label(text=" ")
     #my_label2.grid(row=0,column=0)
-# - Frame with Text and Scrollbar -
-
+    '''
     frame = tk.Frame(root)
     frame.grid()
-
+    
     text = tk.Text(frame)
     text.grid()
     
@@ -121,9 +124,11 @@ def BWA_GUI():
     
     text['yscrollcommand'] = scrollbar.set
     scrollbar['command'] = text.yview
+    '''
 
-    
-    #-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+# --- menu for exit buttons ---
+#-----------------------------------------------------------------------------
     
     #creating menu items
     my_menu=Menu(root)
@@ -134,11 +139,10 @@ def BWA_GUI():
     my_menu.add_cascade(label = "File", menu=file_menu)
     file_menu.add_command(label = "Exit", command=root.destroy)
     
-    my_text = Text(root, width=60, height=20)
-    my_text.grid(row=6, column=0)
     
-    
-    #-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+# --- functions that GUI button uses' ---
+#-----------------------------------------------------------------------------
     
     #start of defineing the different functions
     def search():
@@ -223,14 +227,25 @@ def BWA_GUI():
             l_Input = 'bwa mem -t 1 reference.fasta SRR2093871_1.fastq.gz |samtools sort -o sorted.bam'
             out_Capture(l_Input, 10)
             print("Thread: end")
-
             
             #os.system('mv '+ BRefFileName +' index/')#move fasta file to index
             #os.system('bwa index index/'+BRefFileName)
             #g_BAM = fd.askdirectory(title="Please select output pathway")
             #os.system('bwa mem -t 8 index/'+ BRefFileName+' '+BFileName+' |samtools sort -o '+g_BAM+'.bam')
 
-    #-----------------------------------------------------------------------------
+            
+            
+    def bwa_thread():
+        t_bwa1 = ""
+
+        t_bwa1 = threading.Thread(target=BWA_run, daemon=True, name=t_bwa1).start()
+        t_bwa1.join()
+
+            
+            
+#-----------------------------------------------------------------------------
+# --- define main frames for GUI ---
+#-----------------------------------------------------------------------------
     
     #this is defineing all the parts that are in the root/main part of the gui
     wget_frame=LabelFrame(root, text="wget file download", padx=20, pady=20)
@@ -240,8 +255,11 @@ def BWA_GUI():
     seq_frame=LabelFrame(root, text="set mapping sequence",padx=20, pady=20)
     seq_frame2=LabelFrame(root, text="set 2nd mapping sequence",padx=20, pady=20)
     parm_frame=LabelFrame(root, text="check if you want to change parameters",padx=20, pady=20)
-    
-    #-----------------------------------------------------------------------------
+    text_frame=LabelFrame(root, text="Console", padx=20, pady=20)
+
+#-----------------------------------------------------------------------------
+# --- placing frames into the root GUI ---     
+#-----------------------------------------------------------------------------
     
     #griding the frames
     wget_frame.grid(row=1,column=1)
@@ -251,8 +269,12 @@ def BWA_GUI():
     seq_frame.grid(row=5,column=1)
     seq_frame2.grid(row=6,column=1)
     parm_frame.grid(row=7,column=1)
+    text_frame.grid(row=8, column=1)
+
     
-    #-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+# --- placing the entry boxes ---
+#-----------------------------------------------------------------------------
     
     #places a entry box on the screen
     refe = Entry(ref_frame, width=50, borderwidth="5")
@@ -265,6 +287,10 @@ def BWA_GUI():
     e.insert(0,"gene ID ")
     e.get()
     
+    e_seq2 = Entry(seq_frame, width=50, borderwidth="5")
+    e_seq2.grid(row=3,column=1)
+    e_seq2.insert(0,"gene ID ")
+    e_seq2.get()
     
     e1 = Entry(E_frame, width=50, borderwidth="5")
     e1.grid(row=1,column=1)
@@ -281,7 +307,9 @@ def BWA_GUI():
     e3.insert(0,"wget URL")
     g_url=e3.get()
     
-    #-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+# --- drop down menu ---
+#-----------------------------------------------------------------------------
     '''
     #making drop down menu
     val=StringVar()
@@ -291,9 +319,9 @@ def BWA_GUI():
                       "protein")
     drop.grid(row=1,column=0)
     '''
-    #-----------------------------------------------------------------------------
-    
-    #-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+# --- making buttons for different functions --- 
+#-----------------------------------------------------------------------------
 
     ref_search_button=Button(ref_frame, 
                          text="file search", 
@@ -313,10 +341,11 @@ def BWA_GUI():
                          command=wget_run)
     BWA_button=Button(root, 
                          text="run", 
-                         command=BWA_run)
+                         command=bwa_thread)
 
-
-    #-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+# --- placing buttons into frames ---
+#-----------------------------------------------------------------------------
 
     #organizing the buttons on the grid on the window
     esearch_button.grid(row=1,
@@ -325,8 +354,6 @@ def BWA_GUI():
                     column=2)
     wget_button.grid(row=3, 
                      column=2)
-
-
     ref_search_button.grid(row=1,
                        column=2)
     search_button.grid(row=2,
@@ -334,10 +361,72 @@ def BWA_GUI():
     BWA_button.grid(row=6,
                     column=2)
 
+
+#-----------------------------------------------------------------------------
+# - Frame with Text and Scrollbar -
+#-----------------------------------------------------------------------------
+    text=Text(text_frame)
+    text.pack(side='left', fill='y')
+    scrollbar=Scrollbar(text_frame)
+    scrollbar.pack(side='right', fill='y')
+    text['yscrollcommand']=scrollbar.set
+    scrollbar['command']=text.yview
+
+
+#-----------------------------------------------------------------------------
+
+#-----------------------------------------------------------------------------
+    '''
+    def sel():
+    
+        if (var.get() == 1):
+            wget_button['state'] = DISABLED
+            sra_button['state'] = DISABLED
+            esearch_button['state'] = NORMAL
+            search_button['state'] = NORMAL
+            ref_search_button['state'] = NORMAL
+            e['state'] = NORMAL
+            refe['state'] = NORMAL
+            e0['state'] = NORMAL
+            e1['state'] = DISABLED
+            e2['state'] = DISABLED
+
+        elif (var.get() == 2):
+            wget_button['state'] = NORMAL
+            sra_button['state'] = NORMAL
+            refe['state'] = DISABLED 
+            
+            e['state'] = NORMAL
+            e1['state'] = NORMAL
+            e2['state'] = NORMAL
+            esearch_button['state'] = DISABLED
+            search_button['state'] = NORMAL
+            ref_search_button['state'] = DISABLED
+
+    var3 = IntVar()
+
+    R1 = Radiobutton(root, text="Upload FASTA", variable=var3, value=1,
+                      command=sel)
+
+
+    R2 = Radiobutton(root, text="Download FASTA", variable=var3, value=2, anchor = W,
+                      command=sel)
+
+
+    selectedButton = var3.get()
+    
+    R1.grid(row=2,
+            column=0)
+    R2.grid(row=3,
+            column=0)
+    '''
+#-----------------------------------------------------------------------------
+# --- root loop and print out ---
+#-----------------------------------------------------------------------------
     old_stdout = sys.stdout    
     sys.stdout = Redirect(text)
-
-
+    
+    
     root.mainloop()
     sys.stdout = old_stdout
 
