@@ -32,6 +32,7 @@ global g_BAM
 global g_url
 global g_accession
 global filename
+global g_entrez
 #set intial values to the global variables
 g_url = "null"
 g_accession = "null"
@@ -39,7 +40,7 @@ g_FASTA = 'reference.fasta'
 g_SAM = 'output.sam'
 g_BAM = 'output.bam'
 filename="reference gene ID"
-
+g_entrez='null'
 
 
 #-----------------------------------------------------------------------------
@@ -67,12 +68,13 @@ class Redirect():
 def run_Main():
     t_Main = ""
     t_Main = threading.Thread(target=BWA_GUI, daemon=False, name=t_Main).start()
-
+'''
 def bwa_thread():
     t_bwa1 = ""
 
     t_bwa1 = threading.Thread(target=BWA_run, daemon=True, name=t_bwa1).start()
     t_bwa1.join()
+'''
 def out_pnt(X):
     while True:
         out_txt = X.stdout.readline()
@@ -90,6 +92,23 @@ def out_Capture(inp_String, t_Delay):
         time.sleep(t_Delay)
     else:
         out_pnt(X)
+
+def stats():
+  os.system('samtools stats output.sorted.bam | grep ^SN| cut -f 2- > samtools.stats.txt')
+  os.system('bamtools stats -in output.sorted.bam > bamtools.stats.txt')
+
+
+def open_txt():
+  root = Tk()
+  text_file = filedialog.askopenfile(initialdr="C:/home", title= "Open Text", filetypes=(("Text Files", "*.txt"),))
+  text_file = open(text_file, 'r')
+  fileread= text_file.read()
+  
+  my_text.insert(END, fileread)
+  text_file.close()
+  
+  
+  my_text = Text(root, width=800, height=200)
         
 #-----------------------------------------------------------------------------
 # ------- example function ------
@@ -145,7 +164,7 @@ def BWA_GUI():
 #-----------------------------------------------------------------------------
     
     #start of defineing the different functions
-    def search():
+    def seq_search():
         
         global BFileName
         
@@ -158,8 +177,27 @@ def BWA_GUI():
             title="select a file",
             filetypes = filetype)
         BFileName = os.path.basename(root.filename)
+        seq.delete(0,END)
+        seq.insert(0,BFileName)
         #this is a test print out and not needed
-        alabel=Label(root, text=BFileName).grid()
+        #alabel=Label(root, text=BFileName).grid()
+    def seq2_search():
+        
+        global BFileName2
+        
+        filetype = (
+        ('grep files', '*.gz'),
+        ('fasta files', '*.fasta'),
+        ('All files', '*.*'))
+    
+        root.filename = fd.askopenfilename(
+            title="select a file",
+            filetypes = filetype)
+        BFileName2 = os.path.basename(root.filename)
+        seq2.delete(0,END)
+        seq2.insert(0,BFileName2)
+        #this is a test print out and not needed
+        #alabel=Label(root, text=BFileName2).grid()
         
     def ref_search():
         
@@ -172,12 +210,15 @@ def BWA_GUI():
             title="select a file",
             filetypes = filetype)
         BRefFileName = os.path.basename(root.filename)
+        refe.delete(0,END)
+        refe.insert(0,BRefFileName)
         #this is a test print out and not needed
-        alabel=Label(root, text=BRefFileName).grid()
+        #alabel=Label(root, text=BRefFileName).grid()
     
     def E_search():
+        
         Entrez.email="jmburd287@gmail.com"
-        db_id=val.get()
+        db_id='nucleotide'
         seq_id=e1.get()
         
         handle=Entrez.efetch(db=db_id, 
@@ -219,14 +260,34 @@ def BWA_GUI():
             except:
                 print()
             
-            print("Thread: start")
-            out_Capture('ls', 0.00)
-            l_Input = 'bwa index reference.fasta'
-            out_Capture(l_Input, 0.00)
-
-            l_Input = 'bwa mem -t 1 reference.fasta SRR2093871_1.fastq.gz |samtools sort -o sorted.bam'
-            out_Capture(l_Input, 10)
-            print("Thread: end")
+            if (Type.get()==1):
+                
+                print("Thread: start")
+                out_Capture('ls', 0.00)
+                os.system('mv '+ BRefFileName +' index/') #move fasta file to index
+                l_Input = 'bwa index index/'+BRefFileName
+                out_Capture(l_Input, 0.00)
+                
+                out_BAM = fd.askdirectory(title="Please select output pathway")
+    
+                l_Input = 'bwa mem -t 8 index/'+ BRefFileName+' '+BFileName+' |samtools sort -o '+out_BAM+'.bam'
+                out_Capture(l_Input, 10)
+                print("Thread: end")
+                
+            elif(Type.get()==2):
+                
+                print("Thread: start")
+                out_Capture('ls', 0.00)
+                os.system('mv '+ BRefFileName +' index/') #move fasta file to index
+                l_Input = 'bwa index index/'+BRefFileName
+                out_Capture(l_Input, 0.00)
+                
+                out_BAM = fd.askdirectory(title="Please select output pathway")
+    
+                l_Input = 'bwa mem -t 8 index/'+ BRefFileName+' '+BFileName+' '+BFileName2+' |samtools sort -o '+out_BAM+'.bam'
+                out_Capture(l_Input, 10)
+                print("Thread: end")
+            
             
             #os.system('mv '+ BRefFileName +' index/')#move fasta file to index
             #os.system('bwa index index/'+BRefFileName)
@@ -241,8 +302,6 @@ def BWA_GUI():
         t_bwa1 = threading.Thread(target=BWA_run, daemon=True, name=t_bwa1).start()
         t_bwa1.join()
 
-            
-            
 #-----------------------------------------------------------------------------
 # --- define main frames for GUI ---
 #-----------------------------------------------------------------------------
@@ -250,7 +309,7 @@ def BWA_GUI():
     #this is defineing all the parts that are in the root/main part of the gui
     wget_frame=LabelFrame(root, text="wget file download", padx=20, pady=20)
     sra_frame=LabelFrame(root, text="SRA file download",padx=20, pady=20)
-    E_frame=LabelFrame(root, text="Etrenz download",padx=20, pady=20)
+    E_frame=LabelFrame(root, text="Sequence Download",padx=20, pady=20)
     ref_frame=LabelFrame(root, text="set reference sequence", padx=20, pady=20)
     seq_frame=LabelFrame(root, text="set mapping sequence",padx=20, pady=20)
     seq_frame2=LabelFrame(root, text="set 2nd mapping sequence",padx=20, pady=20)
@@ -271,7 +330,6 @@ def BWA_GUI():
     parm_frame.grid(row=7,column=1)
     text_frame.grid(row=8, column=1)
 
-    
 #-----------------------------------------------------------------------------
 # --- placing the entry boxes ---
 #-----------------------------------------------------------------------------
@@ -282,20 +340,20 @@ def BWA_GUI():
     refe.insert(0,filename)
     refe.get()
     
-    e = Entry(seq_frame, width=50, borderwidth="5")
-    e.grid(row=2,column=1)
-    e.insert(0,"gene ID ")
-    e.get()
+    seq = Entry(seq_frame, width=50, borderwidth="5")
+    seq.grid(row=2,column=1)
+    seq.insert(0,"gene ID ")
     
-    e_seq2 = Entry(seq_frame, width=50, borderwidth="5")
-    e_seq2.grid(row=3,column=1)
-    e_seq2.insert(0,"gene ID ")
-    e_seq2.get()
+    
+    seq2 = Entry(seq_frame, width=50, borderwidth="5")
+    seq2.grid(row=3,column=1)
+    seq2.insert(0,"gene ID ")
+    seq2.get()
     
     e1 = Entry(E_frame, width=50, borderwidth="5")
     e1.grid(row=1,column=1)
     e1.insert(0,"gene ID ")
-    e1.get()
+    g_entrez=e1.get()
     
     e2 = Entry(E_frame, width=50, borderwidth="5")
     e2.grid(row=2,column=1)
@@ -328,16 +386,18 @@ def BWA_GUI():
                          command=ref_search)
     search_button=Button(seq_frame, 
                          text="file search", 
-                         command=search)
-
+                         command=seq_search)
+    search_button2=Button(seq_frame, 
+                         text="file search", 
+                         command=seq2_search)
     esearch_button=Button(E_frame, 
-                          text="entrez search", 
+                          text="Entrez Download", 
                           command=E_search)
     sra_button=Button(E_frame, 
-                         text="Download", 
+                         text="SRA Download", 
                          command=sra_run)
     wget_button=Button(E_frame, 
-                         text="Download", 
+                         text="wget Download", 
                          command=wget_run)
     BWA_button=Button(root, 
                          text="run", 
@@ -358,9 +418,10 @@ def BWA_GUI():
                        column=2)
     search_button.grid(row=2,
                        column=2)
+    search_button2.grid(row=3,
+                       column=2)
     BWA_button.grid(row=6,
                     column=2)
-
 
 #-----------------------------------------------------------------------------
 # - Frame with Text and Scrollbar -
@@ -372,54 +433,102 @@ def BWA_GUI():
     text['yscrollcommand']=scrollbar.set
     scrollbar['command']=text.yview
 
-
 #-----------------------------------------------------------------------------
-
+#radio buttons for download type
 #-----------------------------------------------------------------------------
-    '''
+    
     def sel():
     
         if (var.get() == 1):
+            
+            esearch_button['state'] = NORMAL
             wget_button['state'] = DISABLED
             sra_button['state'] = DISABLED
-            esearch_button['state'] = NORMAL
-            search_button['state'] = NORMAL
-            ref_search_button['state'] = NORMAL
-            e['state'] = NORMAL
-            refe['state'] = NORMAL
-            e0['state'] = NORMAL
-            e1['state'] = DISABLED
-            e2['state'] = DISABLED
-
-        elif (var.get() == 2):
-            wget_button['state'] = NORMAL
-            sra_button['state'] = NORMAL
-            refe['state'] = DISABLED 
             
-            e['state'] = NORMAL
-            e1['state'] = NORMAL
-            e2['state'] = NORMAL
+            e1['state']=NORMAL
+            e2['state'] = DISABLED
+            e3['state'] = DISABLED
+            
+        elif (var.get() == 2):
             esearch_button['state'] = DISABLED
-            search_button['state'] = NORMAL
-            ref_search_button['state'] = DISABLED
+            sra_button['state'] = NORMAL
+            wget_button['state'] = DISABLED
+            
+            e1['state']=DISABLED
+            e2['state'] = NORMAL
+            e3['state'] = DISABLED
+            
+        elif (var.get() == 3):
+            esearch_button['state'] = DISABLED
+            sra_button['state'] = DISABLED
+            wget_button['state'] = NORMAL
+            
+            e1['state']=DISABLED
+            e2['state'] = DISABLED
+            e3['state'] = NORMAL
 
-    var3 = IntVar()
+    var = IntVar()
+    #default every as disabled so that wrong button cant be used without selecting download type first
+    esearch_button['state'] = DISABLED
+    sra_button['state'] = DISABLED
+    wget_button['state'] = DISABLED
+    e1['state']=DISABLED
+    e2['state'] = DISABLED
+    e3['state'] = DISABLED
 
-    R1 = Radiobutton(root, text="Upload FASTA", variable=var3, value=1,
+    R1 = Radiobutton(E_frame, text="Entrez", variable=var, value=1,
                       command=sel)
-
-
-    R2 = Radiobutton(root, text="Download FASTA", variable=var3, value=2, anchor = W,
+    R2 = Radiobutton(E_frame, text="SRA", variable=var, value=2, anchor = W,
                       command=sel)
-
-
-    selectedButton = var3.get()
+    R3 = Radiobutton(E_frame, text="wget", variable=var, value=3, anchor = W,
+                      command=sel)
     
-    R1.grid(row=2,
+    R1.grid(row=0,
             column=0)
-    R2.grid(row=3,
-            column=0)
-    '''
+    R2.grid(row=0,
+            column=1)
+    R3.grid(row=0,
+            column=2)
+    
+#-----------------------------------------------------------------------------
+#radio buttons for aligment type
+#-----------------------------------------------------------------------------
+    
+    def run_select():
+    
+        if (Type.get() == 1):
+            
+            search_button['state'] = NORMAL
+            search_button2['state'] = DISABLED
+            
+            seq['state']=NORMAL
+            seq2['state'] = DISABLED
+            
+        elif (Type.get() == 2):
+            search_button['state'] = NORMAL
+            search_button2['state'] = NORMAL
+            
+            
+            seq['state']=NORMAL
+            seq2['state']=NORMAL
+
+    Type = IntVar()
+    #default every as disabled so that wrong button cant be used
+    search_button['state'] = DISABLED
+    search_button2['state'] = DISABLED
+    seq['state']=DISABLED
+    seq2['state'] = DISABLED
+
+    SR1 = Radiobutton(seq_frame, text="Single aligment", variable=Type, value=1,
+                      command=run_select)
+    SR2 = Radiobutton(seq_frame, text="Pair-end aligment", variable=Type, value=2, anchor = W,
+                      command=run_select)
+    
+    SR1.grid(row=0,
+            column=1)
+    SR2.grid(row=0,
+            column=2)  
+   
 #-----------------------------------------------------------------------------
 # --- root loop and print out ---
 #-----------------------------------------------------------------------------
