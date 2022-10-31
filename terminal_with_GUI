@@ -47,7 +47,8 @@ g_entrez='null'
 #-----------------------------------------------------------------------------
 # --- classes ---
 #-----------------------------------------------------------------------------
-
+#Based on example console found on stack overflow
+#furas. (2020, June 12). Redirect terminal output to Tkinter. Stack Overflow. Retrieved October 31, 2022, from https://stackoverflow.com/questions/62335989/redirect-terminal-output-to-tkinter 
 class to_Console():
     def __init__(self, widget, autoscroll=True):
         self.widget = widget
