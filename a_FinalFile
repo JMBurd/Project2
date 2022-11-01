@@ -1,0 +1,565 @@
+import tkinter as tk
+import sys
+import subprocess
+import threading
+
+from Bio import SeqIO
+from Bio import Entrez
+from Bio.Sequencing.Applications import BwaIndexCommandline
+import os
+import time
+import datetime
+from tkinter import *
+
+from tkinter import filedialog as fd
+from PIL import ImageTk, Image
+from tkinter import messagebox as mb
+from datetime import datetime
+#-----------------------------------------------------------------------------
+# --- Global Varables for button functions ---
+#-----------------------------------------------------------------------------
+
+global g_FASTA
+global g_SAM
+global g_BAM
+global g_url
+global g_accession
+global filename
+global g_entrez
+#set intial values to the global variables
+g_url = "null"
+g_accession = "null"
+g_FASTA = 'reference.fasta'
+g_SAM = 'output.sam'
+g_BAM = 'output.bam'
+filename="reference gene ID"
+g_entrez='null'
+
+
+#-----------------------------------------------------------------------------
+# --- classes ---
+#-----------------------------------------------------------------------------
+#Based on example console found on stack overflow
+#furas. (2020, June 12). Redirect terminal output to Tkinter. Stack Overflow. Retrieved October 31, 2022, from https://stackoverflow.com/questions/62335989/redirect-terminal-output-to-tkinter 
+class to_Console():
+    def __init__(self, widget, autoscroll=True):
+        self.widget = widget
+        self.autoscroll = autoscroll
+    def write(self, text):
+        self.widget.insert('end', text)
+        if self.autoscroll:
+            self.widget.see("end")  # autoscroll
+
+
+    #def flush(self):
+    #    pass
+#-----------------------------------------------------------------------------
+# --- functions ---
+#-----------------------------------------------------------------------------
+
+
+
+def run_Main():
+    t_Main = ""
+    t_Main = threading.Thread(target=BWA_GUI, daemon=False, name=t_Main).start()
+'''
+def bwa_thread():
+    t_bwa1 = ""
+    t_bwa1 = threading.Thread(target=BWA_run, daemon=True, name=t_bwa1).start()
+    t_bwa1.join()
+'''
+def out_pnt(X):
+    while True:
+        out_txt = X.stdout.readline()
+        if out_txt == '':
+            print("Command Complete")
+            break
+        if out_txt:
+            print(out_txt.strip())
+
+def out_Capture(inp_String, t_Delay):
+    X = subprocess.Popen(inp_String, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, bufsize=1, text=True, shell=True)  
+
+    while X.poll():
+        out_pnt(X)
+        time.sleep(t_Delay)
+    else:
+        out_pnt(X)
+
+def stats():
+  os.system('samtools stats output.sorted.bam | grep ^SN| cut -f 2- > samtools.stats.txt')
+  os.system('bamtools stats -in output.sorted.bam > bamtools.stats.txt')
+
+
+def open_txt():
+  root = Tk()
+  text_file = filedialog.askopenfile(initialdr="C:/home", title= "Open Text", filetypes=(("Text Files", "*.txt"),))
+  text_file = open(text_file, 'r')
+  fileread= text_file.read()
+  
+  my_text.insert(END, fileread)
+  text_file.close()
+  
+  
+  my_text = Text(root, width=800, height=200)
+        
+#-----------------------------------------------------------------------------
+# ------- example function ------
+#-----------------------------------------------------------------------------
+
+
+
+
+#-----------------------------------------------------------------------------
+# --- Example UI ---
+#-----------------------------------------------------------------------------
+
+def BWA_GUI():
+    root = tk.Tk()
+    root.title("BWA")
+    #root.iconbitmap('/home/jburd/anaconda3/test_programs/unnamed.png')
+    #my_img = ImageTk.PhotoImage(image=PIL.Image.fromarray("unnamed.png"))
+    #my_img=ImageTk.PhotoImage(Image.open(r"unnamed.png").resize((600,200))) #image was to big have to resize to fit
+    #my_label=Label(image=my_img)
+    #my_label.grid(row=0,column=0, ipady=0.5, columnspan=5)
+    #my_label2=Label(text=" ")
+    #my_label2.grid(row=0,column=0)
+    '''
+    frame = tk.Frame(root)
+    frame.grid()
+    
+    text = tk.Text(frame)
+    text.grid()
+    
+    scrollbar = tk.Scrollbar(frame)
+    scrollbar.grid()
+    
+    text['yscrollcommand'] = scrollbar.set
+    scrollbar['command'] = text.yview
+    '''
+
+#-----------------------------------------------------------------------------
+# --- menu for exit buttons ---
+#-----------------------------------------------------------------------------
+    
+    #creating menu items
+    my_menu=Menu(root)
+    
+    root.config(menu=my_menu) #configuring the menu
+    
+    file_menu=Menu(my_menu)
+    my_menu.add_cascade(label = "File", menu=file_menu)
+    file_menu.add_command(label = "Exit", command=root.destroy)
+    
+    
+#-----------------------------------------------------------------------------
+# --- functions that GUI button uses' ---
+#-----------------------------------------------------------------------------
+    
+    #start of defineing the different functions
+    def seq_search():
+        
+        global BFileName
+        
+        filetype = (
+        ('grep files', '*.gz'),
+        ('fasta files', '*.fasta'),
+        ('All files', '*.*'))
+    
+        root.filename = fd.askopenfilename(
+            title="select a file",
+            filetypes = filetype)
+        BFileName = os.path.basename(root.filename)
+        seq.delete(0,END)
+        seq.insert(0,BFileName)
+        #this is a test print out and not needed
+        #alabel=Label(root, text=BFileName).grid()
+        print(BFileName)
+
+    
+    def seq2_search():
+        
+        global BFileName2
+        
+        filetype = (
+        ('grep files', '*.gz'),
+        ('fasta files', '*.fasta'),
+        ('All files', '*.*'))
+    
+        root.filename = fd.askopenfilename(
+            title="select a file",
+            filetypes = filetype)
+        BFileName2 = os.path.basename(root.filename)
+        seq2.delete(0,END)
+        seq2.insert(0,BFileName2)
+        #this is a test print out and not needed
+        #alabel=Label(root, text=BFileName2).grid()
+        print(BFileName2)
+        
+    def ref_search():
+        
+        global BRefFileName
+    
+        filetype = (
+        ('fasta files', '*.fasta'),
+        ('All files', '*.*'))
+        root.filename = fd.askopenfilename(
+            title="select a file",
+            filetypes = filetype)
+        BRefFileName = os.path.basename(root.filename)
+        refe.delete(0,END)
+        refe.insert(0,BRefFileName)
+        print(BRefFileName)
+        #this is a test print out and not needed
+        #alabel=Label(root, text=BRefFileName).grid()
+    
+    def E_search():
+        
+        Entrez.email="jmburd287@gmail.com"
+        db_id='nucleotide'
+        seq_id=e1.get()
+        
+        handle=Entrez.efetch(db=db_id, 
+                             id=seq_id,
+                             rettype='fasta', 
+                             retmode='text')
+        #record=SeqIO.parse(handle,'fasta') to do multiple files then read off in a array
+        record=SeqIO.read(handle,'fasta')
+        outputname=record.id+'.fasta' #record.id gives accession number
+        SeqIO.write(record,outputname,'fasta')
+    
+    def wget_run():
+        if g_url=="null":
+            react=mb.askokcancel("no URL added", "Enter a URL")
+            #Label(root,text=react).grid()
+            print('An attempt to retreive a file using the url URL was made but no URL was entered')
+        else:
+            print('Retreiving file from URL:'+g_url)
+            out_Capture("wget "+g_url,0.00)
+            print('Command Complete')
+        return
+    
+    def sra_run():
+        if g_accession=="null":
+            react=mb.askokcancel("no accession number added", "Enter a accession number")
+            print('An attempt to retrieve a file was made but no accession number was added')
+            #Label(root,text=react).grid()
+        else:
+            print('Retreiving file using the accession number:'+g_accession)
+            out_Capture("prefetch "+g_accession,0.00)     
+            out_Capture("fasterq-dump "+g_accession,0.00)
+            print('Command Completes')
+        return
+    def open_txt(filename):
+        fileread = open(filename+'.txt','r')
+        for line in fileread:
+            print(line)
+        fileread.close()
+
+    def BWA_run():
+    
+            try:
+                out_Capture('mkdir mapping',0.00)#create directory
+            except:
+                print()
+            try:
+                out_Capture('mkdir report',0.00)#create directory
+            except:
+                print()
+            out_Capture('cd mapping/',0.00)#go into directory
+    
+            try:
+                out_Capture('mkdir index',0.00)#make index directory
+            except:
+                print()
+            print('Reading first from from '+BFileName)
+
+            c_Time = datetime.now()
+            cur_Time = c_Time.strftime("%m_%d_%H_%M")
+            
+            if (Type.get()==1):
+                
+                print("Thread: start")
+                out_Capture('ls', 0.00)
+                os.system('mv '+ BRefFileName +' index/') #move fasta file to index
+                l_Input = 'bwa index index/'+BRefFileName
+                out_Capture(l_Input, 0.00)
+                print('Indexing Complete')
+                out_BAM = 'OutputBAM_' + cur_Time
+                
+                l_Input = 'bwa mem -t 1 index/'+ BRefFileName+' '+BFileName+' |samtools sort -o mapping/'+out_BAM+'.bam'
+                out_Capture(l_Input, 1)
+                
+            elif(Type.get()==2):
+                
+                print("Thread: start")
+                out_Capture('ls', 0.00)
+                os.system('mv '+ BRefFileName +' index/') #move fasta file to index
+                l_Input = 'bwa index index/'+BRefFileName
+                print('Reading index file from' + l_Input)
+                out_Capture(l_Input, 0.00)
+                print('Indexing Complete')
+                out_BAM = 'OutputBAM_' + cur_Time
+    
+                l_Input = 'bwa mem -t 1 index/'+ BRefFileName+' '+BFileName+' '+BFileName2+' |samtools sort -o mapping/'+out_BAM+'.bam'
+                out_Capture(l_Input, 1)
+                
+            #Create state files then read them
+            print('Creating stat files')
+            out_Capture('samtools stats mapping/'+out_BAM+'.bam | grep ^SN| cut -f 2- > report/'+out_BAM+'sam.stats.txt',0.0)
+            out_Capture('bamtools stats -in mapping/'+out_BAM+'.bam > report/'+out_BAM+'bam.stats.txt',0.0)
+            print('Stat files created')
+            
+            print('Reading Stat files')
+            print('reading first report')
+            open_txt('report/'+out_BAM+'sam.stats')
+            print('reading second report')
+            open_txt('report/'+out_BAM+'bam.stats')
+            print('Run successfully completed')
+            print("Thread: end")
+            
+            
+    def bwa_thread():
+        t_bwa1 = ""
+        t_bwa1 = threading.Thread(target=BWA_run, daemon=True, name=t_bwa1).start()
+        t_bwa1.join()
+
+#-----------------------------------------------------------------------------
+# --- define main frames for GUI ---
+#-----------------------------------------------------------------------------
+    
+    #this is defineing all the parts that are in the root/main part of the gui
+    wget_frame=LabelFrame(root, text="wget file download", padx=20, pady=20)
+    sra_frame=LabelFrame(root, text="SRA file download",padx=20, pady=20)
+    E_frame=LabelFrame(root, text="Sequence Download",padx=20, pady=20)
+    ref_frame=LabelFrame(root, text="set reference sequence", padx=20, pady=20)
+    seq_frame=LabelFrame(root, text="set mapping sequence",padx=20, pady=20)
+    seq_frame2=LabelFrame(root, text="set 2nd mapping sequence",padx=20, pady=20)
+    parm_frame=LabelFrame(root, text="check if you want to change parameters",padx=20, pady=20)
+    text_frame=LabelFrame(root, text="Console", padx=5, pady=10)
+
+#-----------------------------------------------------------------------------
+# --- placing frames into the root GUI ---     
+#-----------------------------------------------------------------------------
+    
+    #griding the frames
+    wget_frame.grid(row=1,column=1)
+    sra_frame.grid(row=2,column=1)
+    E_frame.grid(row=3,column=1)
+    ref_frame.grid(row=4,column=1)
+    seq_frame.grid(row=5,column=1)
+    seq_frame2.grid(row=6,column=1)
+    parm_frame.grid(row=7,column=1)
+    text_frame.grid(row=8, column=1)
+
+#-----------------------------------------------------------------------------
+# --- placing the entry boxes ---
+#-----------------------------------------------------------------------------
+    
+    #places a entry box on the screen
+    refe = Entry(ref_frame, width=50, borderwidth="5")
+    refe.grid(row=1,column=1)
+    refe.insert(0,filename)
+    refe.get()
+    
+    seq = Entry(seq_frame, width=50, borderwidth="5")
+    seq.grid(row=2,column=1)
+    seq.insert(0,"gene ID ")
+    
+    
+    seq2 = Entry(seq_frame, width=50, borderwidth="5")
+    seq2.grid(row=3,column=1)
+    seq2.insert(0,"gene ID ")
+    seq2.get()
+    
+    e1 = Entry(E_frame, width=50, borderwidth="5")
+    e1.grid(row=1,column=1)
+    e1.insert(0,"gene ID ")
+    g_entrez=e1.get()
+    
+    e2 = Entry(E_frame, width=50, borderwidth="5")
+    e2.grid(row=2,column=1)
+    e2.insert(0,"Accession ID")
+    g_accession=e2.get()
+    
+    e3 = Entry(E_frame, width=50, borderwidth="5")
+    e3.grid(row=3,column=1)
+    e3.insert(0,"wget URL")
+    g_url=e3.get()
+
+#-----------------------------------------------------------------------------
+# --- drop down menu ---
+#-----------------------------------------------------------------------------
+    '''
+    #making drop down menu
+    val=StringVar()
+    val.set("nucleotide")
+    drop = OptionMenu(E_frame,val, #this needs to in intalized with the type of the variable intvar() for interger
+                      "nucleotide",
+                      "protein")
+    drop.grid(row=1,column=0)
+    '''
+#-----------------------------------------------------------------------------
+# --- making buttons for different functions --- 
+#-----------------------------------------------------------------------------
+
+    ref_search_button=Button(ref_frame, 
+                         text="file search", 
+                         command=ref_search)
+    search_button=Button(seq_frame, 
+                         text="file search", 
+                         command=seq_search)
+    search_button2=Button(seq_frame, 
+                         text="file search", 
+                         command=seq2_search)
+    esearch_button=Button(E_frame, 
+                          text="Entrez Download", 
+                          command=E_search)
+    sra_button=Button(E_frame, 
+                         text="SRA Download", 
+                         command=sra_run)
+    wget_button=Button(E_frame, 
+                         text="wget Download", 
+                         command=wget_run)
+    BWA_button=Button(root, 
+                         text="run", 
+                         command=bwa_thread)
+
+#-----------------------------------------------------------------------------
+# --- placing buttons into frames ---
+#-----------------------------------------------------------------------------
+
+    #organizing the buttons on the grid on the window
+    esearch_button.grid(row=1,
+                        column=2)
+    sra_button.grid(row=2, 
+                    column=2)
+    wget_button.grid(row=3, 
+                     column=2)
+    ref_search_button.grid(row=1,
+                       column=2)
+    search_button.grid(row=2,
+                       column=2)
+    search_button2.grid(row=3,
+                       column=2)
+    BWA_button.grid(row=6,
+                    column=2)
+
+#-----------------------------------------------------------------------------
+# - Frame with Text and Scrollbar -
+#-----------------------------------------------------------------------------
+    text=Text(text_frame, width = 80, height = 10)
+    text.pack(side='left', fill='y')
+    scrollbar=Scrollbar(text_frame)
+    scrollbar.pack(side='right', fill='y')
+    text['yscrollcommand']=scrollbar.set
+    scrollbar['command']=text.yview
+
+#-----------------------------------------------------------------------------
+#radio buttons for download type
+#-----------------------------------------------------------------------------
+    
+    def sel():
+    
+        if (var.get() == 1):
+            
+            esearch_button['state'] = NORMAL
+            wget_button['state'] = DISABLED
+            sra_button['state'] = DISABLED
+            
+            e1['state']=NORMAL
+            e2['state'] = DISABLED
+            e3['state'] = DISABLED
+            
+        elif (var.get() == 2):
+            esearch_button['state'] = DISABLED
+            sra_button['state'] = NORMAL
+            wget_button['state'] = DISABLED
+            
+            e1['state']=DISABLED
+            e2['state'] = NORMAL
+            e3['state'] = DISABLED
+            
+        elif (var.get() == 3):
+            esearch_button['state'] = DISABLED
+            sra_button['state'] = DISABLED
+            wget_button['state'] = NORMAL
+            
+            e1['state']=DISABLED
+            e2['state'] = DISABLED
+            e3['state'] = NORMAL
+
+    var = IntVar()
+    #default every as disabled so that wrong button cant be used without selecting download type first
+    esearch_button['state'] = DISABLED
+    sra_button['state'] = DISABLED
+    wget_button['state'] = DISABLED
+    e1['state']=DISABLED
+    e2['state'] = DISABLED
+    e3['state'] = DISABLED
+
+    R1 = Radiobutton(E_frame, text="Entrez", variable=var, value=1,
+                      command=sel)
+    R2 = Radiobutton(E_frame, text="SRA", variable=var, value=2, anchor = W,
+                      command=sel)
+    R3 = Radiobutton(E_frame, text="wget", variable=var, value=3, anchor = W,
+                      command=sel)
+    
+    R1.grid(row=0,
+            column=0)
+    R2.grid(row=0,
+            column=1)
+    R3.grid(row=0,
+            column=2)
+    
+#-----------------------------------------------------------------------------
+#radio buttons for aligment type
+#-----------------------------------------------------------------------------
+    
+    def run_select():
+    
+        if (Type.get() == 1):
+            
+            search_button['state'] = NORMAL
+            search_button2['state'] = DISABLED
+            
+            seq['state']=NORMAL
+            seq2['state'] = DISABLED
+            
+        elif (Type.get() == 2):
+            search_button['state'] = NORMAL
+            search_button2['state'] = NORMAL
+            
+            
+            seq['state']=NORMAL
+            seq2['state']=NORMAL
+
+    Type = IntVar()
+    #default every as disabled so that wrong button cant be used
+    search_button['state'] = DISABLED
+    search_button2['state'] = DISABLED
+    seq['state']=DISABLED
+    seq2['state'] = DISABLED
+
+    SR1 = Radiobutton(seq_frame, text="Single aligment", variable=Type, value=1,
+                      command=run_select)
+    SR2 = Radiobutton(seq_frame, text="Pair-end aligment", variable=Type, value=2, anchor = W,
+                      command=run_select)
+    
+    SR1.grid(row=0,
+            column=1)
+    SR2.grid(row=0,
+            column=2)  
+   
+#-----------------------------------------------------------------------------
+# --- root loop and print out ---
+#-----------------------------------------------------------------------------
+    old_stdout = sys.stdout    
+    sys.stdout = to_Console(text)
+    
+    
+    root.mainloop()
+    sys.stdout = old_stdout
+
+
+run_Main()
