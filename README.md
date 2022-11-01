@@ -60,3 +60,11 @@ o	Week 8 finalizing code
 o	Week 9 troubleshooting/ additional features
 o	Week 10 solidify code and plan presentation
 
+Operation system and Insallation
+System is designed to be used on Linux
+  Install Python3
+  Install BWA
+  Install SRA
+  Install BAMTools
+  Install SAMTools
+  Install Python3 tkinter
